@@ -1,0 +1,223 @@
+/* Import Comfortaa Font from Google Fonts via CSS */
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap');
+
+/* Import Bootstrap - Using compiled CSS for faster build */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+@import 'sweetalert2/dist/sweetalert2.min.css';
+
+/* Import Professional Admin Styles */
+@import './admin-professional.css';
+
+/* Custom Variables - MUST come after Bootstrap imports */
+:root {
+    --primary-color: #2563eb;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --light-bg: #f8fafc;
+    --text-dark: #1e293b;
+}
+
+/* ===========================================
+   COMFORTAA FONT OVERRIDE - MUST BE LAST
+   =========================================== */
+
+/* Override Bootstrap's font variables */
+:root,
+:root[data-bs-theme="light"],
+:root[data-bs-theme="dark"] {
+    --bs-body-font-family: 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    --bs-font-sans-serif: 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Direct font-family override on body and all elements */
+html {
+    font-family: 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+body {
+    font-family: 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    color: var(--text-dark);
+    background-color: var(--light-bg);
+}
+
+/* Ensure ALL text elements use Comfortaa */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+p, span, a, li, td, th, label, div {
+    font-family: 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Form controls and buttons */
+.form-control, .form-select, .btn, input, textarea, select, button,
+.nav-link, .dropdown-item, .list-group-item, .card-title, .card-text {
+    font-family: 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Benefit Icons - Perfect Circles */
+.benefit-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+/* Custom Utility Classes */
+.text-primary-custom {
+    color: var(--primary-color) !important;
+}
+
+.bg-primary-custom {
+    background-color: var(--primary-color) !important;
+}
+
+/* Admin Sidebar Styles */
+.admin-sidebar {
+    min-height: 100vh;
+    background-color: #1e293b;
+    color: #fff;
+}
+
+.admin-sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s;
+}
+
+.admin-sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.admin-sidebar .nav-link.active {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.admin-sidebar .nav-link i {
+    width: 20px;
+    margin-right: 0.5rem;
+}
+
+/* Student Sidebar Styles */
+.student-sidebar {
+    min-height: 100vh;
+    background-color: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+}
+
+.student-sidebar .nav-link {
+    color: #64748b;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s;
+}
+
+.student-sidebar .nav-link:hover {
+    background-color: #e2e8f0;
+    color: var(--primary-color);
+}
+
+.student-sidebar .nav-link.active {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+/* Card Enhancements */
+.card {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card {
+    border-left: 4px solid;
+}
+
+.stat-card.primary {
+    border-left-color: var(--primary-color);
+}
+
+.stat-card.success {
+    border-left-color: var(--success-color);
+}
+
+.stat-card.warning {
+    border-left-color: var(--warning-color);
+}
+
+.stat-card.danger {
+    border-left-color: var(--danger-color);
+}
+
+/* Question Numbering */
+.question-main {
+    margin-left: 0;
+}
+
+.question-sub {
+    margin-left: 2rem;
+    border-left: 3px solid #e2e8f0;
+    padding-left: 1rem;
+}
+
+/* Answer Toggle */
+.answer-section {
+    background-color: #f8fafc;
+    border-left: 4px solid var(--primary-color);
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 0.375rem;
+}
+
+/* Image Gallery */
+.image-gallery img {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.image-gallery img:hover {
+    transform: scale(1.05);
+}
+
+/* Loading Spinner */
+.spinner-custom {
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+    .admin-sidebar, .student-sidebar {
+        position: fixed;
+        left: -100%;
+        transition: left 0.3s;
+        z-index: 1000;
+    }
+
+    .admin-sidebar.show, .student-sidebar.show {
+        left: 0;
+    }
+}

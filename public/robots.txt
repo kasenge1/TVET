@@ -1,0 +1,32 @@
+# TVET Revision - robots.txt
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+Allow: /
+
+# Disallow admin and auth pages
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /password/
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /email/
+Disallow: /learn/
+Disallow: /profile
+Disallow: /student/
+
+# Disallow API endpoints
+Disallow: /api/
+
+# Disallow internal pages
+Disallow: /blocked
+Disallow: /questions
+
+# Allow search engine crawlers to access CSS and JS
+Allow: /build/
+Allow: /storage/
+
+# Sitemap location
+Sitemap: https://tvetrevision.co.ke/sitemap.xml

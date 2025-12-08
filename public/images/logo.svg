@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 50">
+  <defs>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d6efd"/>
+      <stop offset="100%" style="stop-color:#0b5ed7"/>
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d6efd"/>
+      <stop offset="100%" style="stop-color:#0b5ed7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon Background -->
+  <rect x="2" y="5" width="40" height="40" rx="10" fill="url(#iconGradient)"/>
+
+  <!-- Graduation Cap Icon -->
+  <g fill="#ffffff" transform="translate(7, 12)">
+    <!-- Cap top -->
+    <polygon points="15,2 0,10 15,18 30,10"/>
+    <!-- Cap band -->
+    <rect x="5" y="14" width="20" height="3" rx="1"/>
+    <!-- Tassel -->
+    <circle cx="26" cy="10" r="2"/>
+    <line x1="26" y1="12" x2="26" y2="22" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="26" cy="24" r="3"/>
+  </g>
+
+  <!-- TVET Text -->
+  <text x="52" y="34" font-family="Comfortaa, Arial, sans-serif" font-size="22" font-weight="700" fill="url(#textGradient)">TVET</text>
+
+  <!-- Revision Text -->
+  <text x="115" y="34" font-family="Comfortaa, Arial, sans-serif" font-size="22" font-weight="500" fill="#6c757d">Revision</text>
+</svg>
