@@ -27,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
             'check.blocked' => \App\Http\Middleware\CheckUserBlocked::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'install.redirect' => \App\Http\Middleware\RedirectIfInstalled::class,
+            'installed' => \App\Http\Middleware\RedirectIfNotInstalled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

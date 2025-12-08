@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LearnController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
@@ -22,6 +23,25 @@ use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Installation Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('install')->name('install.')->middleware('install.redirect')->group(function () {
+    Route::get('/', [InstallController::class, 'welcome'])->name('welcome');
+    Route::get('/requirements', [InstallController::class, 'requirements'])->name('requirements');
+    Route::get('/database', [InstallController::class, 'database'])->name('database');
+    Route::post('/database', [InstallController::class, 'databaseStore'])->name('database.store');
+    Route::get('/application', [InstallController::class, 'application'])->name('application');
+    Route::post('/application', [InstallController::class, 'applicationStore'])->name('application.store');
+    Route::get('/admin', [InstallController::class, 'admin'])->name('admin');
+    Route::post('/admin', [InstallController::class, 'adminStore'])->name('admin.store');
+    Route::get('/finalize', [InstallController::class, 'finalize'])->name('finalize');
+    Route::post('/process', [InstallController::class, 'process'])->name('process');
+    Route::get('/complete', [InstallController::class, 'complete'])->name('complete');
+});
 
 /*
 |--------------------------------------------------------------------------
