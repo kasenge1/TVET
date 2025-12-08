@@ -25,6 +25,9 @@ $websiteSchema = [
         'query-input' => 'required name=search_term_string'
     ]
 ];
+
+// Get hero settings from database
+$heroSettings = \App\Models\SiteSetting::getHeroSettings();
 @endphp
 
 @push('structured_data')
@@ -39,15 +42,15 @@ $websiteSchema = [
     <div class="container position-relative py-5">
         <div class="row align-items-center">
             <div class="col-lg-6 mb-4 mb-lg-0">
-                <h1 class="display-5 fw-bold mb-3">Kenya KNEC TVET Exam Preparation Made Simple</h1>
-                <p class="lead mb-4 opacity-90">Master your KNEC exams with past papers, detailed answers, and progress tracking. Study smarter, not harder.</p>
+                <h1 class="display-5 fw-bold mb-3">{{ $heroSettings['heading'] }}</h1>
+                <p class="lead mb-4 opacity-90">{{ $heroSettings['subheading'] }}</p>
                 <div class="d-flex flex-wrap gap-3">
                     <a href="{{ route('courses.index') }}" class="btn btn-light btn-lg px-4">
-                        <i class="bi bi-book me-2"></i>Browse Courses
+                        <i class="bi bi-book me-2"></i>{{ $heroSettings['primary_button_text'] }}
                     </a>
                     @guest
                     <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg px-4">
-                        <i class="bi bi-person-plus me-2"></i>Start Free
+                        <i class="bi bi-person-plus me-2"></i>{{ $heroSettings['secondary_button_text'] }}
                     </a>
                     @endguest
                 </div>
@@ -278,8 +281,8 @@ $websiteSchema = [
 <!-- CTA Section -->
 <section class="hero-gradient text-white py-5">
     <div class="container py-4 text-center position-relative">
-        <h2 class="fw-bold mb-3">Ready to Ace Your Exams?</h2>
-        <p class="lead mb-4 opacity-90 mx-auto" style="max-width: 600px;">Join thousands of students preparing smarter with TVET Revision.</p>
+        <h2 class="fw-bold mb-3">{{ $heroSettings['cta_heading'] }}</h2>
+        <p class="lead mb-4 opacity-90 mx-auto" style="max-width: 600px;">{{ $heroSettings['cta_subheading'] }}</p>
         @guest
         <a href="{{ route('register') }}" class="btn btn-light btn-lg px-5">
             <i class="bi bi-rocket-takeoff me-2"></i>Get Started Free

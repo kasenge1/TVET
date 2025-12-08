@@ -609,6 +609,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('settings/config/clear', [AdminSettingsController::class, 'clearConfig'])->name('settings.config.clear');
     Route::post('settings/routes/clear', [AdminSettingsController::class, 'clearRoutes'])->name('settings.routes.clear');
 
+    Route::get('settings/hero', [AdminSettingsController::class, 'hero'])->name('settings.hero');
+    Route::put('settings/hero', [AdminSettingsController::class, 'updateHero'])->name('settings.hero.update');
+
     // Subscription Packages Routes
     Route::get('settings/packages', [AdminSubscriptionPackageController::class, 'index'])->name('settings.packages.index');
     Route::get('settings/packages/create', [AdminSubscriptionPackageController::class, 'create'])->name('settings.packages.create');

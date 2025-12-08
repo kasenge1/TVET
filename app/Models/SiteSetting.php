@@ -562,4 +562,35 @@ class SiteSetting extends Model
     {
         return static::get('pwa_requires_subscription', '1') === '1';
     }
+
+    /**
+     * Get hero section settings
+     */
+    public static function getHeroSettings()
+    {
+        return [
+            'heading' => static::get('hero_heading', 'Kenya KNEC TVET Exam Preparation Made Simple'),
+            'subheading' => static::get('hero_subheading', 'Master your KNEC exams with past papers, detailed answers, and progress tracking. Study smarter, not harder.'),
+            'primary_button_text' => static::get('hero_primary_button_text', 'Browse Courses'),
+            'secondary_button_text' => static::get('hero_secondary_button_text', 'Start Free'),
+            'cta_heading' => static::get('hero_cta_heading', 'Ready to Ace Your Exams?'),
+            'cta_subheading' => static::get('hero_cta_subheading', 'Join thousands of students preparing smarter with TVET Revision.'),
+        ];
+    }
+
+    /**
+     * Set hero section settings
+     */
+    public static function setHeroSettings(array $settings)
+    {
+        $allowedKeys = ['heading', 'subheading', 'primary_button_text', 'secondary_button_text', 'cta_heading', 'cta_subheading'];
+
+        foreach ($settings as $key => $value) {
+            if (in_array($key, $allowedKeys)) {
+                static::set("hero_{$key}", $value ?? '', 'hero');
+            }
+        }
+
+        return static::getHeroSettings();
+    }
 }

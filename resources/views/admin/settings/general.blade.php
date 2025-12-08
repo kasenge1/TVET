@@ -13,6 +13,12 @@
         </a>
     </div>
     <div class="col-6 col-md-4 col-lg">
+        <a href="{{ route('admin.settings.hero') }}" class="btn btn-outline-secondary w-100 py-2">
+            <i class="bi bi-stars d-block mb-1"></i>
+            <small>Hero</small>
+        </a>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.contact') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-telephone d-block mb-1"></i>
             <small>Contact</small>

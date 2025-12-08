@@ -541,4 +541,39 @@ class SettingsController extends Controller
 
         return back()->with('success', 'PWA/Offline settings updated successfully!');
     }
+
+    /**
+     * Hero section settings page.
+     */
+    public function hero()
+    {
+        $heroSettings = SiteSetting::getHeroSettings();
+        return view('admin.settings.hero', compact('heroSettings'));
+    }
+
+    /**
+     * Update hero section settings.
+     */
+    public function updateHero(Request $request)
+    {
+        $validated = $request->validate([
+            'hero_heading' => 'required|string|max:255',
+            'hero_subheading' => 'required|string|max:500',
+            'hero_primary_button_text' => 'required|string|max:50',
+            'hero_secondary_button_text' => 'required|string|max:50',
+            'hero_cta_heading' => 'required|string|max:255',
+            'hero_cta_subheading' => 'required|string|max:500',
+        ]);
+
+        SiteSetting::setHeroSettings([
+            'heading' => $validated['hero_heading'],
+            'subheading' => $validated['hero_subheading'],
+            'primary_button_text' => $validated['hero_primary_button_text'],
+            'secondary_button_text' => $validated['hero_secondary_button_text'],
+            'cta_heading' => $validated['hero_cta_heading'],
+            'cta_subheading' => $validated['hero_cta_subheading'],
+        ]);
+
+        return back()->with('success', 'Hero section settings updated successfully!');
+    }
 }
