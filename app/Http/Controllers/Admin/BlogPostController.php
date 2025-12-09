@@ -8,6 +8,7 @@ use App\Models\BlogPost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Stevebauman\Purify\Facades\Purify;
 
 class BlogPostController extends Controller
 {
@@ -62,6 +63,14 @@ class BlogPostController extends Controller
         $validated['author_id'] = Auth::id();
         $validated['is_featured'] = $request->boolean('is_featured');
 
+        // Sanitize HTML content to prevent XSS attacks
+        if (!empty($validated['content'])) {
+            $validated['content'] = Purify::clean($validated['content']);
+        }
+        if (!empty($validated['excerpt'])) {
+            $validated['excerpt'] = Purify::clean($validated['excerpt']);
+        }
+
         if ($validated['status'] === 'published' && empty($validated['published_at'])) {
             $validated['published_at'] = now();
         }
@@ -107,6 +116,14 @@ class BlogPostController extends Controller
         ]);
 
         $validated['is_featured'] = $request->boolean('is_featured');
+
+        // Sanitize HTML content to prevent XSS attacks
+        if (!empty($validated['content'])) {
+            $validated['content'] = Purify::clean($validated['content']);
+        }
+        if (!empty($validated['excerpt'])) {
+            $validated['excerpt'] = Purify::clean($validated['excerpt']);
+        }
 
         if ($validated['status'] === 'published' && empty($validated['published_at']) && !$post->published_at) {
             $validated['published_at'] = now();

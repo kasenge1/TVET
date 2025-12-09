@@ -43,11 +43,10 @@ class MpesaCallbackController extends Controller
      */
     public function handleCallback(Request $request)
     {
-        // Log the raw request for debugging
+        // Log callback receipt with masked sensitive data
         Log::channel('mpesa')->info('M-Pesa Callback Received', [
             'ip' => $request->ip(),
-            'headers' => $request->headers->all(),
-            'data' => $request->all(),
+            'has_data' => !empty($request->all()),
         ]);
 
         // Validate IP in production (skip in sandbox/local)
@@ -140,7 +139,10 @@ class MpesaCallbackController extends Controller
                     'user_id' => $subscription->user_id,
                     'amount' => $subscription->amount,
                     'transaction_id' => $transactionData['mpesa_receipt'] ?? null,
-                    'phone_number' => $transactionData['phone_number'] ?? $subscription->phone_number,
+                    // Mask phone number for privacy - only show last 4 digits
+                    'phone_masked' => isset($transactionData['phone_number'])
+                        ? '******' . substr($transactionData['phone_number'], -4)
+                        : null,
                 ]);
 
                 // Send subscription confirmation email (non-blocking)

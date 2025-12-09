@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Replace default maintenance mode middleware with custom one
         $middleware->remove(\Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class);
         $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\CheckForMaintenanceMode::class,
             \App\Http\Middleware\CheckUserBlocked::class,
         ]);

@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 class InstallController extends Controller
 {
@@ -104,13 +106,13 @@ class InstallController extends Controller
             return back()->with('error', $connectionTest['message'])->withInput();
         }
 
-        // Store in session for later use
+        // Store in session for later use (encrypt sensitive data)
         session([
             'install.db_host' => $request->db_host,
             'install.db_port' => $request->db_port,
             'install.db_database' => $request->db_database,
             'install.db_username' => $request->db_username,
-            'install.db_password' => $request->db_password ?? '',
+            'install.db_password' => $request->db_password ? Crypt::encryptString($request->db_password) : '',
         ]);
 
         return redirect()->route('install.application');
@@ -174,17 +176,28 @@ class InstallController extends Controller
         $validator = Validator::make($request->all(), [
             'admin_name' => 'required|string|max:255',
             'admin_email' => 'required|email|max:255',
-            'admin_password' => 'required|string|min:8|confirmed',
+            'admin_password' => [
+                'required',
+                'confirmed',
+                Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised(),
+            ],
+        ], [
+            'admin_password.uncompromised' => 'This password has been compromised in data breaches. Please choose a different password.',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
+        // Store admin data (encrypt password in session)
         session([
             'install.admin_name' => $request->admin_name,
             'install.admin_email' => $request->admin_email,
-            'install.admin_password' => $request->admin_password,
+            'install.admin_password' => Crypt::encryptString($request->admin_password),
         ]);
 
         return redirect()->route('install.finalize');
@@ -372,6 +385,16 @@ class InstallController extends Controller
         // Generate new app key
         $appKey = 'base64:' . base64_encode(random_bytes(32));
 
+        // Decrypt database password from session
+        $dbPassword = session('install.db_password');
+        if ($dbPassword) {
+            try {
+                $dbPassword = Crypt::decryptString($dbPassword);
+            } catch (\Exception $e) {
+                // Password might not be encrypted
+            }
+        }
+
         // Update values
         $replacements = [
             'APP_NAME' => '"' . session('install.app_name') . '"',
@@ -380,11 +403,12 @@ class InstallController extends Controller
             'APP_KEY' => $appKey,
             'APP_ENV' => 'production',
             'APP_DEBUG' => 'false',
+            'LOG_LEVEL' => 'warning',
             'DB_HOST' => session('install.db_host'),
             'DB_PORT' => session('install.db_port'),
             'DB_DATABASE' => session('install.db_database'),
             'DB_USERNAME' => session('install.db_username'),
-            'DB_PASSWORD' => '"' . session('install.db_password') . '"',
+            'DB_PASSWORD' => '"' . ($dbPassword ?? '') . '"',
         ];
 
         foreach ($replacements as $key => $value) {
@@ -404,12 +428,21 @@ class InstallController extends Controller
      */
     protected function reconnectDatabase(): void
     {
+        $dbPassword = session('install.db_password');
+        if ($dbPassword) {
+            try {
+                $dbPassword = Crypt::decryptString($dbPassword);
+            } catch (\Exception $e) {
+                // Password might not be encrypted (legacy)
+            }
+        }
+
         config([
             'database.connections.mysql.host' => session('install.db_host'),
             'database.connections.mysql.port' => session('install.db_port'),
             'database.connections.mysql.database' => session('install.db_database'),
             'database.connections.mysql.username' => session('install.db_username'),
-            'database.connections.mysql.password' => session('install.db_password'),
+            'database.connections.mysql.password' => $dbPassword ?? '',
         ]);
 
         DB::purge('mysql');
@@ -421,10 +454,20 @@ class InstallController extends Controller
      */
     protected function createAdminUser(): void
     {
+        // Decrypt admin password from session
+        $adminPassword = session('install.admin_password');
+        if ($adminPassword) {
+            try {
+                $adminPassword = Crypt::decryptString($adminPassword);
+            } catch (\Exception $e) {
+                // Password might not be encrypted
+            }
+        }
+
         $user = User::create([
             'name' => session('install.admin_name'),
             'email' => session('install.admin_email'),
-            'password' => Hash::make(session('install.admin_password')),
+            'password' => Hash::make($adminPassword),
             'role' => 'admin',
             'email_verified_at' => now(),
         ]);

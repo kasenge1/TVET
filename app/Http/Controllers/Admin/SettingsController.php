@@ -379,9 +379,10 @@ class SettingsController extends Controller
      */
     public function updateBranding(Request $request)
     {
+        // Removed SVG from allowed types due to XSS risk (SVG can contain JavaScript)
         $validated = $request->validate([
-            'logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp|max:2048',
-            'favicon' => 'nullable|file|mimes:png,ico,svg|max:512',
+            'logo' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:2048',
+            'favicon' => 'nullable|file|mimes:png,ico|max:512',
             'logo_alt' => 'nullable|string|max:255',
             'remove_logo' => 'nullable|boolean',
             'remove_favicon' => 'nullable|boolean',

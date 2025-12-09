@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class SiteSetting extends Model
 {
@@ -37,6 +39,60 @@ class SiteSetting extends Model
         Cache::forget("site_setting_{$key}");
 
         return $setting;
+    }
+
+    /**
+     * List of keys that should be encrypted
+     */
+    protected static function sensitiveKeys(): array
+    {
+        return [
+            'mpesa_consumer_key',
+            'mpesa_consumer_secret',
+            'mpesa_passkey',
+            'ai_api_key',
+            'recaptcha_secret_key',
+            'mail_password',
+        ];
+    }
+
+    /**
+     * Check if a key is sensitive and should be encrypted
+     */
+    protected static function isSensitiveKey($key): bool
+    {
+        return in_array($key, static::sensitiveKeys());
+    }
+
+    /**
+     * Get an encrypted setting value
+     */
+    public static function getEncrypted($key, $default = null)
+    {
+        $value = static::get($key, null);
+
+        if (empty($value)) {
+            return $default;
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (DecryptException $e) {
+            // Value might not be encrypted yet (legacy data)
+            return $value;
+        }
+    }
+
+    /**
+     * Set an encrypted setting value
+     */
+    public static function setEncrypted($key, $value, $group = 'general')
+    {
+        if (!empty($value)) {
+            $value = Crypt::encryptString($value);
+        }
+
+        return static::set($key, $value, $group);
     }
 
     /**
@@ -75,10 +131,10 @@ class SiteSetting extends Model
     public static function getMpesaSettings()
     {
         return [
-            'consumer_key' => static::get('mpesa_consumer_key', ''),
-            'consumer_secret' => static::get('mpesa_consumer_secret', ''),
+            'consumer_key' => static::getEncrypted('mpesa_consumer_key', ''),
+            'consumer_secret' => static::getEncrypted('mpesa_consumer_secret', ''),
             'shortcode' => static::get('mpesa_shortcode', ''),
-            'passkey' => static::get('mpesa_passkey', ''),
+            'passkey' => static::getEncrypted('mpesa_passkey', ''),
             'environment' => static::get('mpesa_environment', 'sandbox'),
             'callback_url' => static::get('mpesa_callback_url', ''),
         ];
@@ -89,9 +145,15 @@ class SiteSetting extends Model
      */
     public static function setMpesaSettings(array $settings)
     {
+        $sensitiveFields = ['consumer_key', 'consumer_secret', 'passkey'];
+
         foreach ($settings as $key => $value) {
             if (!empty($value)) {
-                static::set("mpesa_{$key}", $value, 'mpesa');
+                if (in_array($key, $sensitiveFields)) {
+                    static::setEncrypted("mpesa_{$key}", $value, 'mpesa');
+                } else {
+                    static::set("mpesa_{$key}", $value, 'mpesa');
+                }
             }
         }
 
@@ -117,7 +179,7 @@ class SiteSetting extends Model
     {
         return [
             'provider' => static::get('ai_provider', 'openai'),
-            'api_key' => static::get('ai_api_key', ''),
+            'api_key' => static::getEncrypted('ai_api_key', ''),
             'model' => static::get('ai_model', 'gpt-4o-mini'),
             'max_tokens' => (int) static::get('ai_max_tokens', 1000),
             'temperature' => (float) static::get('ai_temperature', 0.7),
@@ -134,7 +196,11 @@ class SiteSetting extends Model
 
         foreach ($settings as $key => $value) {
             if (in_array($key, $allowedKeys) && $value !== null && $value !== '') {
-                static::set("ai_{$key}", $value, 'ai');
+                if ($key === 'api_key') {
+                    static::setEncrypted("ai_{$key}", $value, 'ai');
+                } else {
+                    static::set("ai_{$key}", $value, 'ai');
+                }
             }
         }
 
@@ -222,7 +288,7 @@ class SiteSetting extends Model
             'host' => static::get('mail_host', config('mail.mailers.smtp.host', '')),
             'port' => static::get('mail_port', config('mail.mailers.smtp.port', '587')),
             'username' => static::get('mail_username', config('mail.mailers.smtp.username', '')),
-            'password' => static::get('mail_password', ''),
+            'password' => static::getEncrypted('mail_password', ''),
             'encryption' => static::get('mail_encryption', config('mail.mailers.smtp.encryption', 'tls')),
             'from_address' => static::get('mail_from_address', config('mail.from.address', '')),
             'from_name' => static::get('mail_from_name', config('mail.from.name', 'TVET Revision')),
@@ -242,7 +308,11 @@ class SiteSetting extends Model
                 if ($key === 'password' && empty($value)) {
                     continue;
                 }
-                static::set("mail_{$key}", $value ?? '', 'mail');
+                if ($key === 'password') {
+                    static::setEncrypted("mail_{$key}", $value, 'mail');
+                } else {
+                    static::set("mail_{$key}", $value ?? '', 'mail');
+                }
             }
         }
 
@@ -340,7 +410,7 @@ class SiteSetting extends Model
         return [
             'enabled' => static::get('recaptcha_enabled', '0') === '1',
             'site_key' => static::get('recaptcha_site_key', ''),
-            'secret_key' => static::get('recaptcha_secret_key', ''),
+            'secret_key' => static::getEncrypted('recaptcha_secret_key', ''),
             'version' => static::get('recaptcha_version', 'v2'),
             'login_enabled' => static::get('recaptcha_login_enabled', '1') === '1',
             'register_enabled' => static::get('recaptcha_register_enabled', '1') === '1',
@@ -361,7 +431,11 @@ class SiteSetting extends Model
 
         foreach ($settings as $key => $value) {
             if (in_array($key, $allowedKeys)) {
-                static::set("recaptcha_{$key}", $value ?? '', 'recaptcha');
+                if ($key === 'secret_key') {
+                    static::setEncrypted("recaptcha_{$key}", $value ?? '', 'recaptcha');
+                } else {
+                    static::set("recaptcha_{$key}", $value ?? '', 'recaptcha');
+                }
             }
         }
 
@@ -405,7 +479,7 @@ class SiteSetting extends Model
      */
     public static function getRecaptchaSecretKey()
     {
-        return static::get('recaptcha_secret_key', '');
+        return static::getEncrypted('recaptcha_secret_key', '');
     }
 
     /**

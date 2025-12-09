@@ -175,6 +175,14 @@
                 </ul>
             </x-card>
 
+            <!-- Danger Zone -->
+            <x-card title="Danger Zone" class="mb-4 border-danger">
+                <p class="text-muted small mb-3">Once you delete a post, there is no going back.</p>
+                <button type="button" class="btn btn-outline-danger w-100 delete-btn" data-name="{{ $post->title }}">
+                    <i class="bi bi-trash me-1"></i>Delete Post
+                </button>
+            </x-card>
+
             <!-- Publish Settings -->
             <x-card title="Publish Settings">
                 <div class="mb-3">
@@ -252,22 +260,11 @@
     </div>
 </form>
 
-<!-- Danger Zone - Outside main form to avoid nested forms issue -->
-<div class="row">
-    <div class="col-xl-8"></div>
-    <div class="col-xl-4">
-        <x-card title="Danger Zone" class="mt-4 border-danger">
-            <p class="text-muted small mb-3">Once you delete a post, there is no going back.</p>
-            <form action="{{ route('admin.blog.posts.destroy', $post) }}" method="POST" class="delete-form">
-                @csrf
-                @method('DELETE')
-                <button type="button" class="btn btn-outline-danger w-100 delete-btn" data-name="{{ $post->title }}">
-                    <i class="bi bi-trash me-1"></i>Delete Post
-                </button>
-            </form>
-        </x-card>
-    </div>
-</div>
+<!-- Hidden delete form -->
+<form id="delete-form" action="{{ route('admin.blog.posts.destroy', $post) }}" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
 
 @push('scripts')
 <script>
@@ -299,7 +296,7 @@ document.getElementById('status').addEventListener('change', function() {
 // Delete confirmation
 document.querySelector('.delete-btn').addEventListener('click', function(e) {
     e.preventDefault();
-    const form = this.closest('.delete-form');
+    const form = document.getElementById('delete-form');
     const name = this.dataset.name;
 
     Swal.fire({

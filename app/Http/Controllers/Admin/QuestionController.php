@@ -8,6 +8,7 @@ use App\Models\Unit;
 use App\Services\AiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Stevebauman\Purify\Facades\Purify;
 
 class QuestionController extends Controller
 {
@@ -104,6 +105,14 @@ class QuestionController extends Controller
         // For video questions, set a default question_text
         if ($request->question_type === 'video') {
             $validated['question_text'] = $validated['question_text'] ?? 'Video Question';
+        }
+
+        // Sanitize HTML content to prevent XSS attacks
+        if (!empty($validated['question_text'])) {
+            $validated['question_text'] = Purify::clean($validated['question_text']);
+        }
+        if (!empty($validated['answer_text'])) {
+            $validated['answer_text'] = Purify::clean($validated['answer_text']);
         }
 
         // Handle multiple question images upload
@@ -224,6 +233,14 @@ class QuestionController extends Controller
         // For video questions, set a default question_text
         if ($request->question_type === 'video') {
             $validated['question_text'] = $validated['question_text'] ?? 'Video Question';
+        }
+
+        // Sanitize HTML content to prevent XSS attacks
+        if (!empty($validated['question_text'])) {
+            $validated['question_text'] = Purify::clean($validated['question_text']);
+        }
+        if (!empty($validated['answer_text'])) {
+            $validated['answer_text'] = Purify::clean($validated['answer_text']);
         }
 
         // Handle multiple question images upload
