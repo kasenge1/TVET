@@ -144,34 +144,49 @@
 
                 <div class="mb-4">
                     <label for="current_password" class="form-label fw-medium">Current Password</label>
-                    <input type="password"
-                           class="form-control @error('current_password') is-invalid @enderror"
-                           id="current_password"
-                           name="current_password">
-                    @error('current_password')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <div class="input-group">
+                        <input type="password"
+                               class="form-control @error('current_password') is-invalid @enderror"
+                               id="current_password"
+                               name="current_password">
+                        <button class="btn btn-outline-secondary password-toggle" type="button" data-target="current_password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        @error('current_password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <label for="password" class="form-label fw-medium">New Password</label>
-                        <input type="password"
-                               class="form-control @error('password') is-invalid @enderror"
-                               id="password"
-                               name="password">
-                        @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <div class="input-group">
+                            <input type="password"
+                                   class="form-control @error('password') is-invalid @enderror"
+                                   id="password"
+                                   name="password">
+                            <button class="btn btn-outline-secondary password-toggle" type="button" data-target="password">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            @error('password')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <small class="text-muted">Minimum 8 characters</small>
                     </div>
 
                     <div class="col-md-6">
                         <label for="password_confirmation" class="form-label fw-medium">Confirm New Password</label>
-                        <input type="password"
-                               class="form-control"
-                               id="password_confirmation"
-                               name="password_confirmation">
+                        <div class="input-group">
+                            <input type="password"
+                                   class="form-control"
+                                   id="password_confirmation"
+                                   name="password_confirmation">
+                            <button class="btn btn-outline-secondary password-toggle" type="button" data-target="password_confirmation">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -218,3 +233,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.querySelectorAll('.password-toggle').forEach(button => {
+    button.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        const icon = this.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    });
+});
+</script>
+@endpush
