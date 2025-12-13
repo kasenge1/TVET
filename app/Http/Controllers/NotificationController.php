@@ -89,8 +89,8 @@ class NotificationController extends Controller
      */
     public function markAsRead(Notification $notification)
     {
-        // Ensure user owns this notification
-        if ($notification->user_id !== Auth::id()) {
+        // Ensure user owns this notification (use loose comparison to handle int/string mismatch)
+        if ((int) $notification->user_id !== (int) Auth::id()) {
             abort(403, 'You do not have permission to access this notification.');
         }
 
