@@ -35,20 +35,6 @@
                     @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label for="question_number" class="form-label fw-medium">Question Number <span class="text-danger">*</span></label>
-                    <input type="text"
-                           class="form-control @error('question_number') is-invalid @enderror"
-                           id="question_number"
-                           name="question_number"
-                           value="{{ old('question_number', $question->question_number) }}"
-                           required>
-                    <small class="text-muted">Use numbers for main questions (1, 2, 3) and letters for sub-questions (1a, 1b, 2a)</small>
-                    @error('question_number')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
                 <!-- Question Type Selection - Card Style -->
                 <div class="mb-4">
                     <label class="form-label fw-medium">Question Type <span class="text-danger">*</span></label>

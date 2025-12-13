@@ -37,22 +37,6 @@
                            required>
                 </div>
 
-                <div class="mb-4">
-                    <label for="unit_number" class="form-label fw-medium">Unit Number <span class="text-danger">*</span></label>
-                    <input type="number"
-                           class="form-control @error('unit_number') is-invalid @enderror"
-                           id="unit_number"
-                           name="unit_number"
-                           value="{{ old('unit_number', $unit->unit_number) }}"
-                           min="1"
-                           style="max-width: 120px;"
-                           required>
-                    @error('unit_number')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                    <small class="text-muted">Change only if you need to reorder units</small>
-                </div>
-
                 <x-quill-editor
                     name="description"
                     label="Description"
