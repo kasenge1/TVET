@@ -195,34 +195,6 @@ class QuestionController extends Controller
             'unit_id' => 'required|exists:units,id',
             'question_type' => 'required|in:text,video',
             'video_url' => 'required_if:question_type,video|nullable|url',
-            'question_number' => [
-                'required',
-                'string',
-                'max:50',
-                function ($attribute, $value, $fail) use ($request, $question) {
-                    // Check uniqueness based on whether it's a sub-question or main question
-                    if ($request->parent_question_id) {
-                        // Sub-question: unique within the parent question
-                        $exists = Question::where('parent_question_id', $request->parent_question_id)
-                            ->where('question_number', $value)
-                            ->where('id', '!=', $question->id)
-                            ->exists();
-                        if ($exists) {
-                            $fail('Sub-question "' . $value . '" already exists for this parent question.');
-                        }
-                    } else {
-                        // Main question: unique within the unit
-                        $exists = Question::where('unit_id', $request->unit_id)
-                            ->whereNull('parent_question_id')
-                            ->where('question_number', $value)
-                            ->where('id', '!=', $question->id)
-                            ->exists();
-                        if ($exists) {
-                            $fail('Question number "' . $value . '" already exists in this unit.');
-                        }
-                    }
-                },
-            ],
             'parent_question_id' => 'nullable|exists:questions,id',
             'question_text' => 'required_if:question_type,text|nullable|string',
             'question_images.*' => 'nullable|image|max:2048',

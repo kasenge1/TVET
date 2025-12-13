@@ -43,6 +43,8 @@ class UnitController extends Controller
             'course_id' => 'required|exists:courses,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'exam_month' => 'nullable|integer|min:1|max:12',
+            'exam_year' => 'nullable|integer|min:2010|max:' . (date('Y') + 1),
         ]);
 
         // Auto-generate unit number (next available for this course)
@@ -64,7 +66,7 @@ class UnitController extends Controller
     public function show(Unit $unit)
     {
         $unit->load(['course', 'questions']);
-        
+
         return view('admin.units.show', compact('unit'));
     }
 
@@ -74,7 +76,7 @@ class UnitController extends Controller
     public function edit(Unit $unit)
     {
         $courses = Course::orderBy('title')->get();
-        
+
         return view('admin.units.edit', compact('unit', 'courses'));
     }
 
@@ -85,26 +87,11 @@ class UnitController extends Controller
     {
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
-            'unit_number' => [
-                'required',
-                'integer',
-                'min:1',
-                function ($attribute, $value, $fail) use ($request, $unit) {
-                    $exists = Unit::where('course_id', $request->course_id)
-                        ->where('unit_number', $value)
-                        ->where('id', '!=', $unit->id)
-                        ->exists();
-                    if ($exists) {
-                        $fail('Unit number ' . $value . ' already exists for this course.');
-                    }
-                },
-            ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'exam_month' => 'nullable|integer|min:1|max:12',
+            'exam_year' => 'nullable|integer|min:2010|max:' . (date('Y') + 1),
         ]);
-
-        // Set order based on unit_number
-        $validated['order'] = $validated['unit_number'];
 
         $unit->update($validated);
 
