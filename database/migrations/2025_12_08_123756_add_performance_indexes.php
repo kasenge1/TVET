@@ -19,8 +19,12 @@ return new class extends Migration
 
         // Add indexes to subscriptions for status and user queries
         Schema::table('subscriptions', function (Blueprint $table) {
-            $table->index(['user_id', 'status'], 'subscriptions_user_status_index');
-            $table->index('status', 'subscriptions_status_index');
+            if (!Schema::hasIndex('subscriptions', 'subscriptions_user_status_index')) {
+                $table->index(['user_id', 'status'], 'subscriptions_user_status_index');
+            }
+            if (!Schema::hasIndex('subscriptions', 'subscriptions_status_index')) {
+                $table->index('status', 'subscriptions_status_index');
+            }
         });
 
         // Add indexes to question_views for analytics queries
