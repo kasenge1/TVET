@@ -395,6 +395,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::patch('users/{user}', [AdminUserController::class, 'update']);
         Route::post('users/{user}/block', [AdminUserController::class, 'block'])->name('users.block');
         Route::post('users/{user}/unblock', [AdminUserController::class, 'unblock'])->name('users.unblock');
+    });
+    Route::middleware(['permission:impersonate users'])->group(function () {
         Route::post('users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
     });
     Route::middleware(['permission:delete users'])->group(function () {

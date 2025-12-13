@@ -289,9 +289,9 @@
                                     <i class="bi bi-shield-lock text-danger"></i>
                                 </span>
                             @else
-                                {{-- Impersonate button - only for non-staff users --}}
-                                @can('edit users')
-                                @if(!$user->hasRole('super-admin') && $user->hasRole('student') && !$user->hasAnyRole(['admin', 'content-manager', 'question-editor']))
+                                {{-- Impersonate button - only for non-admin users --}}
+                                @can('impersonate users')
+                                @if(!$user->hasRole('super-admin') && !$user->hasAnyRole(['admin', 'content-manager', 'question-editor']))
                                 <form action="{{ route('admin.users.impersonate', $user) }}"
                                       method="POST"
                                       class="d-inline impersonate-form">
