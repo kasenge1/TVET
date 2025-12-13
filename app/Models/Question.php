@@ -50,29 +50,21 @@ class Question extends Model
 
     /**
      * Generate a unique slug for the question.
-     * Slug is unique per unit (not globally).
+     * Uses question number (q1, q2, etc.) for clean, short URLs.
      */
     protected static function generateSlug($question): string
     {
-        $baseSlug = Str::slug(Str::limit(strip_tags($question->question_text), 60, ''));
-
-        if (empty($baseSlug)) {
-            $baseSlug = 'question';
+        // Use question_number if available, otherwise use order or a counter
+        if (!empty($question->question_number)) {
+            return 'q' . $question->question_number;
         }
 
-        // Check if slug already exists in the same unit
-        $slug = $baseSlug;
-        $counter = 1;
-
-        while (static::where('unit_id', $question->unit_id)
-            ->where('slug', $slug)
+        // Fallback: find next available number in this unit
+        $maxOrder = static::where('unit_id', $question->unit_id)
             ->where('id', '!=', $question->id ?? 0)
-            ->exists()) {
-            $slug = $baseSlug . '-' . $counter;
-            $counter++;
-        }
+            ->max('order') ?? 0;
 
-        return $slug;
+        return 'q' . ($maxOrder + 1);
     }
     /**
      * The attributes that are mass assignable.

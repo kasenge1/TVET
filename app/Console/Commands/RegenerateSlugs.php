@@ -86,23 +86,21 @@ class RegenerateSlugs extends Command
         $questions = Question::orderBy('unit_id')->orderBy('order')->get();
         $bar = $this->output->createProgressBar($questions->count());
 
+        // Track counters per unit for questions without question_number
+        $unitCounters = [];
+
         foreach ($questions as $question) {
-            $baseSlug = Str::slug(Str::limit(strip_tags($question->question_text), 60, ''));
-
-            if (empty($baseSlug)) {
-                $baseSlug = 'question';
-            }
-
-            // Make slug unique within the unit
-            $slug = $baseSlug;
-            $counter = 1;
-
-            while (Question::where('unit_id', $question->unit_id)
-                ->where('slug', $slug)
-                ->where('id', '!=', $question->id)
-                ->exists()) {
-                $slug = $baseSlug . '-' . $counter;
-                $counter++;
+            // Use question_number if available
+            if (!empty($question->question_number)) {
+                $slug = 'q' . $question->question_number;
+            } else {
+                // Fallback: use incremental counter per unit
+                $unitId = $question->unit_id;
+                if (!isset($unitCounters[$unitId])) {
+                    $unitCounters[$unitId] = 1;
+                }
+                $slug = 'q' . $unitCounters[$unitId];
+                $unitCounters[$unitId]++;
             }
 
             $question->slug = $slug;
