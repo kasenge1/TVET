@@ -125,8 +125,8 @@
                                              class="rounded-circle me-2"
                                              style="width: 36px; height: 36px; object-fit: cover;">
                                     @else
-                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
-                                             style="width: 36px; height: 36px; font-size: 13px; font-weight: 600;">
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
+                                             style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; font-size: 13px; font-weight: 600;">
                                             {{ strtoupper(substr($user->name, 0, 2)) }}
                                         </div>
                                     @endif
