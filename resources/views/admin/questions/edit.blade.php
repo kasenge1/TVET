@@ -240,44 +240,46 @@
     </div>
 
     <div class="col-xl-4">
-        <x-card title="Question Statistics" class="sticky-top" style="top: 20px;">
-            <div class="d-flex justify-content-between mb-3">
-                <span class="text-muted">Created</span>
-                <span>{{ $question->created_at->format('M d, Y') }}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-3">
-                <span class="text-muted">Last Updated</span>
-                <span>{{ $question->updated_at->format('M d, Y') }}</span>
-            </div>
-            <div class="d-flex justify-content-between">
-                <span class="text-muted">Sub-Questions</span>
-                <span class="fw-bold">{{ $question->subQuestions->count() }}</span>
-            </div>
-        </x-card>
+        <div class="sidebar-sticky" style="position: sticky; top: 20px;">
+            <x-card title="Question Statistics">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Created</span>
+                    <span>{{ $question->created_at->format('M d, Y') }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Last Updated</span>
+                    <span>{{ $question->updated_at->format('M d, Y') }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Sub-Questions</span>
+                    <span class="fw-bold">{{ $question->subQuestions->count() }}</span>
+                </div>
+            </x-card>
 
-        <x-card title="Quick Actions" class="mt-4">
-            <div class="d-grid gap-2">
-                <a href="{{ route('admin.questions.show', $question) }}" class="btn btn-outline-primary">
-                    <i class="bi bi-eye me-2"></i>View Question
-                </a>
-                @if(!$question->parent_question_id)
-                    <a href="{{ route('admin.questions.create', ['unit' => $question->unit_id, 'parent' => $question->id]) }}" class="btn btn-outline-info">
-                        <i class="bi bi-arrow-return-right me-2"></i>Add Sub-Question
+            <x-card title="Quick Actions" class="mt-4">
+                <div class="d-grid gap-2">
+                    <a href="{{ route('admin.questions.show', $question) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye me-2"></i>View Question
                     </a>
-                @endif
-            </div>
-        </x-card>
+                    @if(!$question->parent_question_id)
+                        <a href="{{ route('admin.questions.create', ['unit' => $question->unit_id, 'parent' => $question->id]) }}" class="btn btn-outline-info">
+                            <i class="bi bi-arrow-return-right me-2"></i>Add Sub-Question
+                        </a>
+                    @endif
+                </div>
+            </x-card>
 
-        <x-card title="Tips" class="mt-4">
-            <div class="mb-3">
-                <p class="small text-muted mb-1"><strong>Question Numbers:</strong></p>
-                <p class="small text-muted mb-0">Use numbers for main questions (1, 2, 3) and letters for sub-questions (1a, 1b)</p>
-            </div>
-            <div>
-                <p class="small text-muted mb-1"><strong>Math Formulas:</strong></p>
-                <p class="small text-muted mb-0">Click the <code>fx</code> button in the editor toolbar to insert LaTeX equations</p>
-            </div>
-        </x-card>
+            <x-card title="Tips" class="mt-4">
+                <div class="mb-3">
+                    <p class="small text-muted mb-1"><strong>Question Numbers:</strong></p>
+                    <p class="small text-muted mb-0">Use numbers for main questions (1, 2, 3) and letters for sub-questions (1a, 1b)</p>
+                </div>
+                <div>
+                    <p class="small text-muted mb-1"><strong>Math Formulas:</strong></p>
+                    <p class="small text-muted mb-0">Click the <code>fx</code> button in the editor toolbar to insert LaTeX equations</p>
+                </div>
+            </x-card>
+        </div>
     </div>
 </div>
 @endsection
