@@ -480,9 +480,57 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return redirect()->route('admin.profile')->with('success', 'Password changed successfully!');
     })->name('profile.password');
 
-    // Redirect old settings route to new general settings page
+    // Smart redirect to first available settings page based on user permissions
     Route::get('settings', function () {
-        return redirect()->route('admin.settings.general');
+        /** @var \App\Models\User $user */
+        $user = request()->user();
+
+        // Check permissions in priority order and redirect to first available
+        if ($user->can('manage settings')) {
+            return redirect()->route('admin.settings.general');
+        }
+        if ($user->can('manage branding')) {
+            return redirect()->route('admin.settings.branding');
+        }
+        if ($user->can('manage packages')) {
+            return redirect()->route('admin.settings.packages.index');
+        }
+        if ($user->can('manage ads settings')) {
+            return redirect()->route('admin.settings.ads.index');
+        }
+        if ($user->can('manage hero settings')) {
+            return redirect()->route('admin.settings.hero');
+        }
+        if ($user->can('manage contact settings')) {
+            return redirect()->route('admin.settings.contact');
+        }
+        if ($user->can('manage social settings')) {
+            return redirect()->route('admin.settings.social');
+        }
+        if ($user->can('manage payment settings')) {
+            return redirect()->route('admin.settings.payments');
+        }
+        if ($user->can('manage email settings')) {
+            return redirect()->route('admin.settings.email');
+        }
+        if ($user->can('manage ai settings')) {
+            return redirect()->route('admin.settings.ai');
+        }
+        if ($user->can('manage security settings')) {
+            return redirect()->route('admin.settings.recaptcha');
+        }
+        if ($user->can('manage feature settings')) {
+            return redirect()->route('admin.settings.features');
+        }
+        if ($user->can('manage maintenance')) {
+            return redirect()->route('admin.settings.maintenance');
+        }
+        if ($user->can('view system info')) {
+            return redirect()->route('admin.settings.system');
+        }
+
+        // No permissions - abort
+        abort(403, 'You do not have permission to access settings.');
     })->name('settings');
 
     /*

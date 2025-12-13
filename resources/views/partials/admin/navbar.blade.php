@@ -20,9 +20,11 @@
                     <li><a class="dropdown-item" href="{{ route('admin.profile') }}">
                         <i class="bi bi-person me-2"></i> Profile
                     </a></li>
+                    @canany(['manage settings', 'manage branding', 'manage contact settings', 'manage social settings', 'manage payment settings', 'manage email settings', 'manage ai settings', 'manage ads settings', 'manage security settings', 'manage feature settings', 'manage packages', 'manage hero settings', 'manage maintenance', 'view system info'])
                     <li><a class="dropdown-item" href="{{ route('admin.settings') }}">
                         <i class="bi bi-gear me-2"></i> Settings
                     </a></li>
+                    @endcanany
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="{{ route('home') }}" target="_blank">
                         <i class="bi bi-box-arrow-up-right me-2"></i> View Site
