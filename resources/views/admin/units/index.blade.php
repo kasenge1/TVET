@@ -37,6 +37,9 @@
                                 <span class="text-primary small me-1">Unit {{ $unit->unit_number }}:</span>
                             @endif
                             {{ $unit->title }}
+                            @if($unit->exam_period)
+                                <span class="badge bg-secondary ms-1">{{ $unit->exam_period }}</span>
+                            @endif
                         </div>
                         @if($unit->description)
                             <small class="text-muted">{{ Str::limit(strip_tags($unit->description), 60) }}</small>

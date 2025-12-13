@@ -14,7 +14,9 @@ return new class extends Migration
     {
         // Add index to enrollments for user queries
         Schema::table('enrollments', function (Blueprint $table) {
-            $table->index('user_id', 'enrollments_user_id_index');
+            if (!Schema::hasIndex('enrollments', 'enrollments_user_id_index')) {
+                $table->index('user_id', 'enrollments_user_id_index');
+            }
         });
 
         // Add indexes to subscriptions for status and user queries
@@ -29,24 +31,37 @@ return new class extends Migration
 
         // Add indexes to question_views for analytics queries
         Schema::table('question_views', function (Blueprint $table) {
-            $table->index('user_id', 'question_views_user_id_index');
-            $table->index('question_id', 'question_views_question_id_index');
-            $table->index('viewed_at', 'question_views_viewed_at_index');
+            if (!Schema::hasIndex('question_views', 'question_views_user_id_index')) {
+                $table->index('user_id', 'question_views_user_id_index');
+            }
+            if (!Schema::hasIndex('question_views', 'question_views_question_id_index')) {
+                $table->index('question_id', 'question_views_question_id_index');
+            }
+            // Use created_at instead of viewed_at (column doesn't exist)
+            if (!Schema::hasIndex('question_views', 'question_views_created_at_index')) {
+                $table->index('created_at', 'question_views_created_at_index');
+            }
         });
 
         // Add index to bookmarks for user queries
         Schema::table('bookmarks', function (Blueprint $table) {
-            $table->index('user_id', 'bookmarks_user_id_index');
+            if (!Schema::hasIndex('bookmarks', 'bookmarks_user_id_index')) {
+                $table->index('user_id', 'bookmarks_user_id_index');
+            }
         });
 
         // Add index to site_settings for key lookups
         Schema::table('site_settings', function (Blueprint $table) {
-            $table->index('key', 'site_settings_key_index');
+            if (!Schema::hasIndex('site_settings', 'site_settings_key_index')) {
+                $table->index('key', 'site_settings_key_index');
+            }
         });
 
         // Add index to notifications for user unread queries
         Schema::table('notifications', function (Blueprint $table) {
-            $table->index(['user_id', 'read_at'], 'notifications_user_read_index');
+            if (!Schema::hasIndex('notifications', 'notifications_user_read_index')) {
+                $table->index(['user_id', 'read_at'], 'notifications_user_read_index');
+            }
         });
     }
 
@@ -65,9 +80,15 @@ return new class extends Migration
         });
 
         Schema::table('question_views', function (Blueprint $table) {
-            $table->dropIndex('question_views_user_id_index');
-            $table->dropIndex('question_views_question_id_index');
-            $table->dropIndex('question_views_viewed_at_index');
+            if (Schema::hasIndex('question_views', 'question_views_user_id_index')) {
+                $table->dropIndex('question_views_user_id_index');
+            }
+            if (Schema::hasIndex('question_views', 'question_views_question_id_index')) {
+                $table->dropIndex('question_views_question_id_index');
+            }
+            if (Schema::hasIndex('question_views', 'question_views_created_at_index')) {
+                $table->dropIndex('question_views_created_at_index');
+            }
         });
 
         Schema::table('bookmarks', function (Blueprint $table) {

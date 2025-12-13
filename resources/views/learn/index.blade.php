@@ -145,11 +145,18 @@
                                     </div>
                                     <div class="flex-grow-1">
                                         <h3 class="h6 fw-bold mb-1 text-dark">{{ $unit->title }}</h3>
-                                        <div class="d-flex align-items-center">
-                                            <div class="progress flex-grow-1 me-2" style="height: 4px; max-width: 120px;">
-                                                <div class="progress-bar {{ $isCompleted ? 'bg-success' : 'bg-primary' }}" style="width: {{ $unitProg['percentage'] }}%"></div>
+                                        <div class="d-flex align-items-center flex-wrap gap-2">
+                                            @if($unit->exam_period)
+                                                <span class="badge bg-light text-secondary small">
+                                                    <i class="bi bi-calendar-event me-1"></i>{{ $unit->exam_period }}
+                                                </span>
+                                            @endif
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="height: 4px; width: 80px;">
+                                                    <div class="progress-bar {{ $isCompleted ? 'bg-success' : 'bg-primary' }}" style="width: {{ $unitProg['percentage'] }}%"></div>
+                                                </div>
+                                                <span class="text-muted small">{{ $unitProg['viewed'] }}/{{ $unitProg['total'] }}</span>
                                             </div>
-                                            <span class="text-muted small">{{ $unitProg['viewed'] }}/{{ $unitProg['total'] }}</span>
                                         </div>
                                     </div>
                                     <div class="ms-2 d-flex align-items-center">

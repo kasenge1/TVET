@@ -19,6 +19,11 @@
                 <div class="flex-grow-1">
                     <h1 class="h4 fw-bold mb-2">{{ $unit->title }}</h1>
                     <p class="mb-2 opacity-90">
+                        @if($unit->exam_period)
+                            <span class="badge bg-white bg-opacity-25 me-2">
+                                <i class="bi bi-calendar-event me-1"></i>{{ $unit->exam_period }}
+                            </span>
+                        @endif
                         <i class="bi bi-question-circle me-1"></i>{{ $questions->total() }} Questions
                     </p>
                     <!-- Progress Bar -->
