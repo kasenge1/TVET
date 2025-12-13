@@ -50,15 +50,29 @@ class Question extends Model
 
     /**
      * Generate a unique slug for the question.
+     * Slug is unique per unit (not globally).
      */
     protected static function generateSlug($question): string
     {
-        $baseSlug = Str::slug(Str::limit(strip_tags($question->question_text), 50, ''));
-        $slug = $question->question_number
-            ? $question->question_number . '-' . $baseSlug
-            : $baseSlug;
+        $baseSlug = Str::slug(Str::limit(strip_tags($question->question_text), 60, ''));
 
-        return $slug ?: 'question-' . uniqid();
+        if (empty($baseSlug)) {
+            $baseSlug = 'question';
+        }
+
+        // Check if slug already exists in the same unit
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (static::where('unit_id', $question->unit_id)
+            ->where('slug', $slug)
+            ->where('id', '!=', $question->id ?? 0)
+            ->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
     }
     /**
      * The attributes that are mass assignable.
