@@ -247,13 +247,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Courses Management - requires 'view courses', 'create courses', 'edit courses', 'delete courses'
-    Route::middleware(['permission:view courses'])->group(function () {
-        Route::get('courses', [AdminCourseController::class, 'index'])->name('courses.index');
-        Route::get('courses/{course}', [AdminCourseController::class, 'show'])->name('courses.show');
-    });
+    // IMPORTANT: Static routes (create, bulk-action) must come BEFORE parameter routes ({course})
     Route::middleware(['permission:create courses'])->group(function () {
         Route::get('courses/create', [AdminCourseController::class, 'create'])->name('courses.create');
         Route::post('courses', [AdminCourseController::class, 'store'])->name('courses.store');
+    });
+    Route::middleware(['permission:delete courses'])->group(function () {
+        Route::post('courses/bulk-action', [AdminCourseController::class, 'bulkAction'])->name('courses.bulk-action');
+    });
+    Route::middleware(['permission:view courses'])->group(function () {
+        Route::get('courses', [AdminCourseController::class, 'index'])->name('courses.index');
+        Route::get('courses/{course}', [AdminCourseController::class, 'show'])->name('courses.show');
     });
     Route::middleware(['permission:edit courses'])->group(function () {
         Route::get('courses/{course}/edit', [AdminCourseController::class, 'edit'])->name('courses.edit');
@@ -264,17 +268,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     Route::middleware(['permission:delete courses'])->group(function () {
         Route::delete('courses/{course}', [AdminCourseController::class, 'destroy'])->name('courses.destroy');
-        Route::post('courses/bulk-action', [AdminCourseController::class, 'bulkAction'])->name('courses.bulk-action');
     });
 
     // Levels Management - requires 'view courses', 'edit courses'
-    Route::middleware(['permission:view courses'])->group(function () {
-        Route::get('levels', [AdminLevelController::class, 'index'])->name('levels.index');
-        Route::get('levels/{level}', [AdminLevelController::class, 'show'])->name('levels.show');
-    });
+    // IMPORTANT: Static routes must come BEFORE parameter routes
     Route::middleware(['permission:create courses'])->group(function () {
         Route::get('levels/create', [AdminLevelController::class, 'create'])->name('levels.create');
         Route::post('levels', [AdminLevelController::class, 'store'])->name('levels.store');
+    });
+    Route::middleware(['permission:view courses'])->group(function () {
+        Route::get('levels', [AdminLevelController::class, 'index'])->name('levels.index');
+        Route::get('levels/{level}', [AdminLevelController::class, 'show'])->name('levels.show');
     });
     Route::middleware(['permission:edit courses'])->group(function () {
         Route::get('levels/{level}/edit', [AdminLevelController::class, 'edit'])->name('levels.edit');
@@ -286,19 +290,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // Blog Management - requires blog permissions
+    // IMPORTANT: Static routes must come BEFORE parameter routes
     Route::prefix('blog')->name('blog.')->group(function () {
-        // View posts
-        Route::middleware(['permission:view blog'])->group(function () {
-            Route::get('posts', [AdminBlogPostController::class, 'index'])->name('posts.index');
-            Route::get('posts/{post}', [AdminBlogPostController::class, 'show'])->name('posts.show');
-            Route::get('categories', [AdminBlogCategoryController::class, 'index'])->name('categories.index');
-        });
-        // Create posts
+        // Create posts (static routes first)
         Route::middleware(['permission:create blog'])->group(function () {
             Route::get('posts/create', [AdminBlogPostController::class, 'create'])->name('posts.create');
             Route::post('posts', [AdminBlogPostController::class, 'store'])->name('posts.store');
             Route::get('categories/create', [AdminBlogCategoryController::class, 'create'])->name('categories.create');
             Route::post('categories', [AdminBlogCategoryController::class, 'store'])->name('categories.store');
+        });
+        // Bulk action (static route)
+        Route::middleware(['permission:delete blog'])->group(function () {
+            Route::post('posts/bulk-action', [AdminBlogPostController::class, 'bulkAction'])->name('posts.bulk-action');
+        });
+        // View posts (parameter routes after static)
+        Route::middleware(['permission:view blog'])->group(function () {
+            Route::get('posts', [AdminBlogPostController::class, 'index'])->name('posts.index');
+            Route::get('posts/{post}', [AdminBlogPostController::class, 'show'])->name('posts.show');
+            Route::get('categories', [AdminBlogCategoryController::class, 'index'])->name('categories.index');
         });
         // Edit posts
         Route::middleware(['permission:edit blog'])->group(function () {
@@ -312,20 +321,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         // Delete posts
         Route::middleware(['permission:delete blog'])->group(function () {
             Route::delete('posts/{post}', [AdminBlogPostController::class, 'destroy'])->name('posts.destroy');
-            Route::post('posts/bulk-action', [AdminBlogPostController::class, 'bulkAction'])->name('posts.bulk-action');
             Route::delete('categories/{category}', [AdminBlogCategoryController::class, 'destroy'])->name('categories.destroy');
         });
     });
 
     // Units Management - requires unit permissions
-    Route::middleware(['permission:view units'])->group(function () {
-        Route::get('units', [AdminUnitController::class, 'index'])->name('units.index');
-        Route::get('units/{unit}', [AdminUnitController::class, 'show'])->name('units.show');
-    });
+    // IMPORTANT: Static routes must come BEFORE parameter routes
     Route::middleware(['permission:create units'])->group(function () {
         Route::get('units/create', [AdminUnitController::class, 'create'])->name('units.create');
         Route::post('units', [AdminUnitController::class, 'store'])->name('units.store');
         Route::get('courses/{course}/units/create', [AdminUnitController::class, 'create'])->name('courses.units.create');
+    });
+    Route::middleware(['permission:view units'])->group(function () {
+        Route::get('units', [AdminUnitController::class, 'index'])->name('units.index');
+        Route::get('units/{unit}', [AdminUnitController::class, 'show'])->name('units.show');
     });
     Route::middleware(['permission:edit units'])->group(function () {
         Route::get('units/{unit}/edit', [AdminUnitController::class, 'edit'])->name('units.edit');
@@ -337,11 +346,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // Questions Management - requires question permissions
-    Route::middleware(['permission:view questions'])->group(function () {
-        Route::get('questions', [AdminQuestionController::class, 'index'])->name('questions.index');
-        Route::get('questions/{question}', [AdminQuestionController::class, 'show'])->name('questions.show');
-        Route::get('questions-export', [AdminQuestionController::class, 'export'])->name('questions.export');
-    });
+    // IMPORTANT: Static routes must come BEFORE parameter routes
     Route::middleware(['permission:create questions'])->group(function () {
         Route::get('questions/create', [AdminQuestionController::class, 'create'])->name('questions.create');
         Route::post('questions', [AdminQuestionController::class, 'store'])->name('questions.store');
@@ -351,25 +356,38 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('questions-import', [AdminQuestionController::class, 'processImport'])->name('questions.import.process');
     });
     Route::middleware(['permission:edit questions'])->group(function () {
+        Route::post('questions/generate-answer-preview', [AdminQuestionController::class, 'generateAnswerPreview'])->name('questions.generate-answer-preview');
+    });
+    Route::middleware(['permission:delete questions'])->group(function () {
+        Route::post('questions/bulk-action', [AdminQuestionController::class, 'bulkAction'])->name('questions.bulk-action');
+    });
+    Route::middleware(['permission:view questions'])->group(function () {
+        Route::get('questions', [AdminQuestionController::class, 'index'])->name('questions.index');
+        Route::get('questions-export', [AdminQuestionController::class, 'export'])->name('questions.export');
+        Route::get('questions/{question}', [AdminQuestionController::class, 'show'])->name('questions.show');
+    });
+    Route::middleware(['permission:edit questions'])->group(function () {
         Route::get('questions/{question}/edit', [AdminQuestionController::class, 'edit'])->name('questions.edit');
         Route::put('questions/{question}', [AdminQuestionController::class, 'update'])->name('questions.update');
         Route::patch('questions/{question}', [AdminQuestionController::class, 'update']);
         Route::post('questions/{question}/generate-answer', [AdminQuestionController::class, 'generateAnswer'])->name('questions.generate-answer');
-        Route::post('questions/generate-answer-preview', [AdminQuestionController::class, 'generateAnswerPreview'])->name('questions.generate-answer-preview');
     });
     Route::middleware(['permission:delete questions'])->group(function () {
         Route::delete('questions/{question}', [AdminQuestionController::class, 'destroy'])->name('questions.destroy');
-        Route::post('questions/bulk-action', [AdminQuestionController::class, 'bulkAction'])->name('questions.bulk-action');
     });
 
     // Users Management - requires user permissions
-    Route::middleware(['permission:view users'])->group(function () {
-        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
-        Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
-    });
+    // IMPORTANT: Static routes must come BEFORE parameter routes
     Route::middleware(['permission:create users'])->group(function () {
         Route::get('users/create', [AdminUserController::class, 'create'])->name('users.create');
         Route::post('users', [AdminUserController::class, 'store'])->name('users.store');
+    });
+    Route::middleware(['permission:delete users'])->group(function () {
+        Route::post('users/bulk-action', [AdminUserController::class, 'bulkAction'])->name('users.bulk-action');
+    });
+    Route::middleware(['permission:view users'])->group(function () {
+        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
     });
     Route::middleware(['permission:edit users'])->group(function () {
         Route::get('users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
@@ -381,19 +399,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     Route::middleware(['permission:delete users'])->group(function () {
         Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
-        Route::post('users/bulk-action', [AdminUserController::class, 'bulkAction'])->name('users.bulk-action');
     });
 
     // Roles & Permissions Management
+    // IMPORTANT: Static routes must come BEFORE parameter routes
+    // Manage roles - requires 'manage roles' permission for create/edit/delete
+    Route::middleware(['permission:manage roles'])->group(function () {
+        Route::get('roles/create', [AdminRoleController::class, 'create'])->name('roles.create');
+        Route::post('roles', [AdminRoleController::class, 'store'])->name('roles.store');
+    });
     // View roles - available to users with 'view roles' permission
     Route::middleware(['permission:view roles'])->group(function () {
         Route::get('roles', [AdminRoleController::class, 'index'])->name('roles.index');
         Route::get('roles/{role}', [AdminRoleController::class, 'show'])->name('roles.show');
     });
-    // Manage roles - requires 'manage roles' permission for create/edit/delete
+    // Manage roles - parameter routes
     Route::middleware(['permission:manage roles'])->group(function () {
-        Route::get('roles/create', [AdminRoleController::class, 'create'])->name('roles.create');
-        Route::post('roles', [AdminRoleController::class, 'store'])->name('roles.store');
         Route::get('roles/{role}/edit', [AdminRoleController::class, 'edit'])->name('roles.edit');
         Route::put('roles/{role}', [AdminRoleController::class, 'update'])->name('roles.update');
         Route::delete('roles/{role}', [AdminRoleController::class, 'destroy'])->name('roles.destroy');
