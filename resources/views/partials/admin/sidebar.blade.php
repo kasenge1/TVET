@@ -121,8 +121,8 @@
         </a>
         @endcan
 
-        {{-- SYSTEM SECTION - Only for users with manage settings permission (Super Admin) --}}
-        @can('manage settings')
+        {{-- SYSTEM SECTION - Visible to users with any settings permission --}}
+        @canany(['manage settings', 'manage branding', 'manage contact settings', 'manage social settings', 'manage payment settings', 'manage email settings', 'manage ai settings', 'manage ads settings', 'manage security settings', 'manage feature settings', 'manage packages', 'manage hero settings', 'manage maintenance', 'view system info'])
         <div class="text-white-50 small fw-bold mt-3 mb-2 px-3" style="font-size: 0.7rem;">SYSTEM</div>
 
         <!-- Settings with Submenu -->
@@ -140,16 +140,20 @@
             </a>
             <div class="collapse {{ $settingsOpen ? 'show' : '' }}" id="settingsSubmenu">
                 <div class="submenu-items ps-3" style="border-left: 2px solid rgba(255,255,255,0.1); margin-left: 1rem;">
+                    @can('manage settings')
                     <a href="{{ route('admin.settings.general') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.general') ? 'active' : '' }}"
                        style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
                         <i class="bi bi-sliders me-2" style="font-size: 0.8rem;"></i> General
                     </a>
+                    @endcan
+                    @can('manage branding')
                     <a href="{{ route('admin.settings.branding') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.branding') ? 'active' : '' }}"
                        style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
                         <i class="bi bi-palette me-2" style="font-size: 0.8rem;"></i> Branding
                     </a>
+                    @endcan
                     @can('manage packages')
                     <a href="{{ route('admin.settings.packages.index') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.packages.*') ? 'active' : '' }}"
@@ -164,21 +168,34 @@
                         <i class="bi bi-megaphone me-2" style="font-size: 0.8rem;"></i> Google Ads
                     </a>
                     @endcan
+                    @can('manage hero settings')
+                    <a href="{{ route('admin.settings.hero') }}"
+                       class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.hero') ? 'active' : '' }}"
+                       style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+                        <i class="bi bi-image me-2" style="font-size: 0.8rem;"></i> Hero Section
+                    </a>
+                    @endcan
+                    @can('manage contact settings')
                     <a href="{{ route('admin.settings.contact') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.contact') ? 'active' : '' }}"
                        style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
                         <i class="bi bi-telephone me-2" style="font-size: 0.8rem;"></i> Contact Info
                     </a>
+                    @endcan
+                    @can('manage social settings')
                     <a href="{{ route('admin.settings.social') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.social') ? 'active' : '' }}"
                        style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
                         <i class="bi bi-share me-2" style="font-size: 0.8rem;"></i> Social Media
                     </a>
+                    @endcan
+                    @can('manage payment settings')
                     <a href="{{ route('admin.settings.payments') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.payments') ? 'active' : '' }}"
                        style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
                         <i class="bi bi-credit-card-2-front me-2" style="font-size: 0.8rem;"></i> Payments
                     </a>
+                    @endcan
                     @can('manage email settings')
                     <a href="{{ route('admin.settings.email') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.email') ? 'active' : '' }}"
@@ -193,16 +210,20 @@
                         <i class="bi bi-robot me-2" style="font-size: 0.8rem;"></i> AI Settings
                     </a>
                     @endcan
+                    @can('manage security settings')
                     <a href="{{ route('admin.settings.recaptcha') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.recaptcha') ? 'active' : '' }}"
                        style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
                         <i class="bi bi-shield-lock me-2" style="font-size: 0.8rem;"></i> Security
                     </a>
+                    @endcan
+                    @can('manage feature settings')
                     <a href="{{ route('admin.settings.features') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.features') ? 'active' : '' }}"
                        style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
                         <i class="bi bi-toggles me-2" style="font-size: 0.8rem;"></i> Features
                     </a>
+                    @endcan
                     @can('manage maintenance')
                     <a href="{{ route('admin.settings.maintenance') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.maintenance') ? 'active' : '' }}"
@@ -220,7 +241,7 @@
                 </div>
             </div>
         </div>
-        @endcan
+        @endcanany
     </div>
 </div>
 

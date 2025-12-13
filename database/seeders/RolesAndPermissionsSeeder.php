@@ -90,15 +90,26 @@ class RolesAndPermissionsSeeder extends Seeder
             'view dashboard',
             'view activity logs',
             'clear activity logs',
-            'manage settings',
-            'manage ai settings',
-            'manage email settings',
-            'manage ads settings',
             'send notifications',
 
-            // System permissions
-            'manage maintenance',
-            'view system info',
+            // Settings permissions (granular)
+            'manage settings',          // General settings (site name, description, etc.)
+            'manage branding',          // Logo, favicon, colors
+            'manage contact settings',  // Contact info, address
+            'manage social settings',   // Social media links
+            'manage payment settings',  // M-Pesa, payment gateways
+            'manage email settings',    // SMTP, email configuration
+            'manage ai settings',       // AI provider, API keys
+            'manage ads settings',      // Google Ads configuration
+            'manage security settings', // reCAPTCHA, email verification
+            'manage feature settings',  // Subscriptions, appearance, PWA
+            'manage packages',          // Subscription packages
+            'manage hero settings',     // Homepage hero section
+
+            // System permissions (super-admin only)
+            'manage maintenance',       // Maintenance mode
+            'view system info',         // System cache, PHP info
+            'clear cache',              // Clear application cache
         ];
 
         foreach ($permissions as $permission) {
@@ -111,7 +122,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $superAdmin = Role::firstOrCreate(['name' => 'super-admin']);
         $superAdmin->givePermissionTo(Permission::all());
 
-        // Admin - can manage everything except system settings, roles management, and impersonation
+        // Admin - can manage everything except sensitive system settings, roles management, and impersonation
         $admin = Role::firstOrCreate(['name' => 'admin']);
         $admin->givePermissionTo([
             // Content management
@@ -126,10 +137,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'view users', 'create users', 'edit users', 'block users',
             'view roles', // Can view roles but not manage them
             // Subscriptions (can view and manage)
-            'view subscriptions', 'edit subscriptions', 'manage subscriptions',
+            'view subscriptions', 'edit subscriptions', 'manage subscriptions', 'manage packages',
             // Dashboard & Reports
             'view dashboard', 'view activity logs', 'view analytics',
             'send notifications',
+            // Settings (safe ones only - no payment, email, AI, security, or system)
+            'manage settings',          // General settings
+            'manage branding',          // Branding/logos
+            'manage contact settings',  // Contact info
+            'manage social settings',   // Social media
+            'manage hero settings',     // Hero section
+            'manage feature settings',  // Feature toggles
+            'manage ads settings',      // Ads settings
         ]);
 
         // Content Manager - can manage courses, units, questions, and blog

@@ -485,284 +485,113 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return redirect()->route('admin.settings.general');
     })->name('settings');
 
-    // All Settings Routes - requires 'manage settings' permission
+    /*
+    |--------------------------------------------------------------------------
+    | Settings Routes - Granular Permissions
+    |--------------------------------------------------------------------------
+    | Each settings section has its own permission for fine-grained control.
+    | Admin can access: general, branding, contact, social, hero, features, ads
+    | Super Admin only: payment, email, AI, security, maintenance, system
+    */
+
+    // General Settings - manage settings
     Route::middleware(['permission:manage settings'])->group(function () {
-        // Settings Update Routes
-        Route::put('settings/update', function (\Illuminate\Http\Request $request) {
-            // In a real application, you would store these in a settings table
-            return back()->with('success', 'General settings updated successfully!');
-        })->name('settings.update');
-
-        Route::put('settings/mpesa', function (\Illuminate\Http\Request $request) {
-            $validated = $request->validate([
-                'mpesa_consumer_key' => 'nullable|string|max:255',
-                'mpesa_consumer_secret' => 'nullable|string|max:255',
-                'mpesa_shortcode' => 'nullable|string|max:50',
-                'mpesa_passkey' => 'nullable|string|max:255',
-                'mpesa_environment' => 'required|in:sandbox,production',
-            ]);
-
-            \App\Models\SiteSetting::setMpesaSettings([
-                'consumer_key' => $validated['mpesa_consumer_key'] ?? '',
-                'consumer_secret' => $validated['mpesa_consumer_secret'] ?? '',
-                'shortcode' => $validated['mpesa_shortcode'] ?? '',
-                'passkey' => $validated['mpesa_passkey'] ?? '',
-                'environment' => $validated['mpesa_environment'],
-                'callback_url' => url('/api/mpesa/callback'),
-            ]);
-
-            return back()->with('success', 'M-Pesa settings updated successfully!');
-        })->name('settings.mpesa');
-
-        Route::put('settings/ai', function (\Illuminate\Http\Request $request) {
-            $validated = $request->validate([
-                'ai_provider' => 'required|in:openai,anthropic',
-                'ai_api_key' => 'nullable|string|max:255',
-                'ai_model' => 'required|string|max:100',
-                'ai_max_tokens' => 'required|integer|min:100|max:4000',
-                'ai_temperature' => 'required|numeric|min:0|max:1',
-                'ai_system_prompt' => 'nullable|string|max:2000',
-            ]);
-
-            \App\Models\SiteSetting::setAiSettings([
-                'provider' => $validated['ai_provider'],
-                'api_key' => $validated['ai_api_key'] ?? '',
-                'model' => $validated['ai_model'],
-                'max_tokens' => $validated['ai_max_tokens'],
-                'temperature' => $validated['ai_temperature'],
-                'system_prompt' => $validated['ai_system_prompt'] ?? '',
-            ]);
-
-            return back()->with('success', 'AI settings updated successfully!');
-        })->name('settings.ai');
-
-        Route::post('settings/ai/test', function (\Illuminate\Http\Request $request) {
-            $aiService = new \App\Services\AiService();
-            $result = $aiService->testConnection();
-
-            if ($result['success']) {
-                return response()->json(['success' => true, 'message' => $result['message']]);
-            }
-
-            return response()->json(['success' => false, 'message' => $result['message']], 400);
-        })->name('settings.ai.test');
-
-        Route::put('settings/email', function (\Illuminate\Http\Request $request) {
-            $validated = $request->validate([
-                'mail_driver' => 'required|in:smtp,sendmail,mailgun,ses,log',
-                'mail_host' => 'required_if:mail_driver,smtp|nullable|string|max:255',
-                'mail_port' => 'required_if:mail_driver,smtp|nullable|string|max:10',
-                'mail_username' => 'nullable|string|max:255',
-                'mail_password' => 'nullable|string|max:255',
-                'mail_encryption' => 'nullable|in:tls,ssl,',
-                'mail_from_address' => 'required|email|max:255',
-                'mail_from_name' => 'required|string|max:255',
-            ]);
-
-            \App\Models\SiteSetting::setEmailSettings([
-                'driver' => $validated['mail_driver'],
-                'host' => $validated['mail_host'] ?? '',
-                'port' => $validated['mail_port'] ?? '587',
-                'username' => $validated['mail_username'] ?? '',
-                'password' => $validated['mail_password'] ?? '',
-                'encryption' => $validated['mail_encryption'] ?? 'tls',
-                'from_address' => $validated['mail_from_address'],
-                'from_name' => $validated['mail_from_name'],
-            ]);
-
-            return back()->with('success', 'Email settings updated successfully!');
-        })->name('settings.email');
-
-        Route::post('settings/email/test', function (\Illuminate\Http\Request $request) {
-            try {
-                $emailSettings = \App\Models\SiteSetting::getEmailSettings();
-
-                if (empty($emailSettings['host']) || empty($emailSettings['from_address'])) {
-                    return response()->json(['success' => false, 'message' => 'Email settings are not configured.'], 400);
-                }
-
-                // Configure mail on the fly
-                config([
-                    'mail.default' => $emailSettings['driver'],
-                    'mail.mailers.smtp.host' => $emailSettings['host'],
-                    'mail.mailers.smtp.port' => $emailSettings['port'],
-                    'mail.mailers.smtp.username' => $emailSettings['username'],
-                    'mail.mailers.smtp.password' => $emailSettings['password'],
-                    'mail.mailers.smtp.encryption' => $emailSettings['encryption'] ?: null,
-                    'mail.from.address' => $emailSettings['from_address'],
-                    'mail.from.name' => $emailSettings['from_name'],
-                ]);
-
-                $adminEmail = \Illuminate\Support\Facades\Auth::user()->email;
-
-                \Illuminate\Support\Facades\Mail::raw(
-                    "This is a test email from TVET Revision.\n\nIf you received this, your email settings are configured correctly!\n\nSent at: " . now()->format('F d, Y H:i:s'),
-                    function ($message) use ($adminEmail, $emailSettings) {
-                        $message->to($adminEmail)
-                                ->subject('TVET Revision - Test Email')
-                                ->from($emailSettings['from_address'], $emailSettings['from_name']);
-                    }
-                );
-
-                return response()->json(['success' => true, 'message' => "Test email sent to {$adminEmail}. Please check your inbox."]);
-            } catch (\Exception $e) {
-                return response()->json(['success' => false, 'message' => 'Failed to send test email: ' . $e->getMessage()], 400);
-            }
-        })->name('settings.email.test');
-
-        Route::put('settings/contact', function (\Illuminate\Http\Request $request) {
-            $validated = $request->validate([
-                'contact_email' => 'required|email|max:255',
-                'contact_phone' => 'required|string|max:50',
-                'contact_address' => 'required|string|max:255',
-                'contact_address_line2' => 'nullable|string|max:255',
-                'contact_working_hours' => 'nullable|string|max:100',
-            ]);
-
-            \App\Models\SiteSetting::setContactSettings([
-                'email' => $validated['contact_email'],
-                'phone' => $validated['contact_phone'],
-                'address' => $validated['contact_address'],
-                'address_line2' => $validated['contact_address_line2'] ?? '',
-                'working_hours' => $validated['contact_working_hours'] ?? '',
-            ]);
-
-            return back()->with('success', 'Contact information updated successfully!');
-        })->name('settings.contact');
-
-        Route::put('settings/social', function (\Illuminate\Http\Request $request) {
-            $validated = $request->validate([
-                'social_facebook' => 'nullable|url|max:255',
-                'social_twitter' => 'nullable|url|max:255',
-                'social_instagram' => 'nullable|url|max:255',
-                'social_youtube' => 'nullable|url|max:255',
-                'social_tiktok' => 'nullable|url|max:255',
-                'social_linkedin' => 'nullable|url|max:255',
-                'social_whatsapp' => 'nullable|string|max:50',
-            ]);
-
-            \App\Models\SiteSetting::setSocialSettings([
-                'facebook' => $validated['social_facebook'] ?? '',
-                'twitter' => $validated['social_twitter'] ?? '',
-                'instagram' => $validated['social_instagram'] ?? '',
-                'youtube' => $validated['social_youtube'] ?? '',
-                'tiktok' => $validated['social_tiktok'] ?? '',
-                'linkedin' => $validated['social_linkedin'] ?? '',
-                'whatsapp' => $validated['social_whatsapp'] ?? '',
-            ]);
-
-            return back()->with('success', 'Social media links updated successfully!');
-        })->name('settings.social');
-
-        // Maintenance Page Settings Route
-        Route::put('settings/maintenance/page', function (\Illuminate\Http\Request $request) {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'subtitle' => 'required|string|max:255',
-                'message' => 'required|string',
-                'expected_duration' => 'required|string|max:100',
-                'support_email' => 'nullable|email|max:255',
-                'facebook_url' => 'nullable|url|max:255',
-                'twitter_url' => 'nullable|url|max:255',
-                'instagram_url' => 'nullable|url|max:255',
-                'linkedin_url' => 'nullable|url|max:255',
-            ]);
-
-            $settings = \App\Models\MaintenanceSettings::getSettings();
-            $settings->update($validated);
-
-            return back()->with('success', 'Maintenance page settings updated successfully!');
-        })->name('settings.maintenance.page');
-
-        // Maintenance Mode Routes
-        Route::post('settings/maintenance/down', function () {
-            \Illuminate\Support\Facades\Artisan::call('down', [
-                '--redirect' => '/',
-            ]);
-            return back()->with('success', 'Maintenance mode enabled! Admin panel remains accessible.');
-        })->name('settings.maintenance.down');
-
-        Route::post('settings/maintenance/up', function () {
-            \Illuminate\Support\Facades\Artisan::call('up');
-            return back()->with('success', 'Maintenance mode disabled!');
-        })->name('settings.maintenance.up');
-
-        // Cache Management Routes
-        Route::post('settings/cache/clear', function () {
-            \Illuminate\Support\Facades\Artisan::call('cache:clear');
-            return back()->with('success', 'Application cache cleared successfully!');
-        })->name('settings.cache.clear');
-
-        Route::post('settings/config/clear', function () {
-            \Illuminate\Support\Facades\Artisan::call('config:clear');
-            return back()->with('success', 'Configuration cache cleared successfully!');
-        })->name('settings.config.clear');
-
-        Route::post('settings/route/clear', function () {
-            \Illuminate\Support\Facades\Artisan::call('route:clear');
-            return back()->with('success', 'Route cache cleared successfully!');
-        })->name('settings.route.clear');
-
-        // Dedicated Settings Pages (separate routes for each section)
         Route::get('settings/general', [AdminSettingsController::class, 'general'])->name('settings.general');
         Route::put('settings/general', [AdminSettingsController::class, 'updateGeneral'])->name('settings.general.update');
+    });
 
+    // Branding Settings - manage branding
+    Route::middleware(['permission:manage branding'])->group(function () {
         Route::get('settings/branding', [AdminSettingsController::class, 'branding'])->name('settings.branding');
         Route::post('settings/branding', [AdminSettingsController::class, 'updateBranding'])->name('settings.branding.update');
+    });
 
+    // Contact Settings - manage contact settings
+    Route::middleware(['permission:manage contact settings'])->group(function () {
         Route::get('settings/contact', [AdminSettingsController::class, 'contact'])->name('settings.contact');
         Route::put('settings/contact', [AdminSettingsController::class, 'updateContact'])->name('settings.contact.update');
+    });
 
+    // Social Settings - manage social settings
+    Route::middleware(['permission:manage social settings'])->group(function () {
         Route::get('settings/social', [AdminSettingsController::class, 'social'])->name('settings.social');
         Route::put('settings/social', [AdminSettingsController::class, 'updateSocial'])->name('settings.social.update');
+    });
 
-        Route::get('settings/payments', [AdminSettingsController::class, 'payments'])->name('settings.payments');
-        Route::put('settings/payments', [AdminSettingsController::class, 'updatePayments'])->name('settings.payments.update');
-
-        Route::get('settings/email', [AdminSettingsController::class, 'email'])->name('settings.email');
-        Route::put('settings/email', [AdminSettingsController::class, 'updateEmail'])->name('settings.email.update');
-        Route::post('settings/email/test', [AdminSettingsController::class, 'testEmail'])->name('settings.email.test');
-
-        Route::get('settings/ai', [AdminSettingsController::class, 'ai'])->name('settings.ai');
-        Route::put('settings/ai', [AdminSettingsController::class, 'updateAi'])->name('settings.ai.update');
-        Route::post('settings/ai/test', [AdminSettingsController::class, 'testAi'])->name('settings.ai.test');
-        Route::delete('settings/ai/disconnect', [AdminSettingsController::class, 'disconnectAi'])->name('settings.ai.disconnect');
-
-        Route::get('settings/maintenance', [AdminSettingsController::class, 'maintenance'])->name('settings.maintenance');
-        Route::put('settings/maintenance', [AdminSettingsController::class, 'updateMaintenancePage'])->name('settings.maintenance.update');
-        Route::post('settings/maintenance/enable', [AdminSettingsController::class, 'enableMaintenance'])->name('settings.maintenance.enable');
-        Route::post('settings/maintenance/disable', [AdminSettingsController::class, 'disableMaintenance'])->name('settings.maintenance.disable');
-
-        Route::get('settings/system', [AdminSettingsController::class, 'system'])->name('settings.system');
-        Route::post('settings/cache/clear', [AdminSettingsController::class, 'clearCache'])->name('settings.cache.clear');
-        Route::post('settings/config/clear', [AdminSettingsController::class, 'clearConfig'])->name('settings.config.clear');
-        Route::post('settings/routes/clear', [AdminSettingsController::class, 'clearRoutes'])->name('settings.routes.clear');
-
+    // Hero Settings - manage hero settings
+    Route::middleware(['permission:manage hero settings'])->group(function () {
         Route::get('settings/hero', [AdminSettingsController::class, 'hero'])->name('settings.hero');
         Route::put('settings/hero', [AdminSettingsController::class, 'updateHero'])->name('settings.hero.update');
+    });
 
-        // Subscription Packages Routes
-        Route::get('settings/packages', [AdminSubscriptionPackageController::class, 'index'])->name('settings.packages.index');
-        Route::get('settings/packages/create', [AdminSubscriptionPackageController::class, 'create'])->name('settings.packages.create');
-        Route::post('settings/packages', [AdminSubscriptionPackageController::class, 'store'])->name('settings.packages.store');
-        Route::get('settings/packages/{package}/edit', [AdminSubscriptionPackageController::class, 'edit'])->name('settings.packages.edit');
-        Route::put('settings/packages/{package}', [AdminSubscriptionPackageController::class, 'update'])->name('settings.packages.update');
-        Route::delete('settings/packages/{package}', [AdminSubscriptionPackageController::class, 'destroy'])->name('settings.packages.destroy');
-
-        // Google Ads Settings Routes
-        Route::get('settings/ads', [AdminAdsSettingController::class, 'index'])->name('settings.ads.index');
-        Route::put('settings/ads', [AdminAdsSettingController::class, 'update'])->name('settings.ads.update');
-
-        // Security Settings Routes (reCAPTCHA + Email Verification)
-        Route::get('settings/recaptcha', [AdminSettingsController::class, 'recaptcha'])->name('settings.recaptcha');
-        Route::put('settings/recaptcha', [AdminSettingsController::class, 'updateRecaptcha'])->name('settings.recaptcha.update');
-        Route::put('settings/security', [AdminSettingsController::class, 'updateSecurity'])->name('settings.security.update');
-
-        // Feature Settings Routes (Subscriptions, Appearance, PWA)
+    // Feature Settings - manage feature settings
+    Route::middleware(['permission:manage feature settings'])->group(function () {
         Route::get('settings/features', [AdminSettingsController::class, 'features'])->name('settings.features');
         Route::put('settings/subscription', [AdminSettingsController::class, 'updateSubscription'])->name('settings.subscription.update');
         Route::put('settings/appearance', [AdminSettingsController::class, 'updateAppearance'])->name('settings.appearance.update');
         Route::put('settings/pwa', [AdminSettingsController::class, 'updatePwa'])->name('settings.pwa.update');
+    });
+
+    // Ads Settings - manage ads settings
+    Route::middleware(['permission:manage ads settings'])->group(function () {
+        Route::get('settings/ads', [AdminAdsSettingController::class, 'index'])->name('settings.ads.index');
+        Route::put('settings/ads', [AdminAdsSettingController::class, 'update'])->name('settings.ads.update');
+    });
+
+    // Subscription Packages - manage packages
+    Route::middleware(['permission:manage packages'])->group(function () {
+        Route::get('settings/packages/create', [AdminSubscriptionPackageController::class, 'create'])->name('settings.packages.create');
+        Route::post('settings/packages', [AdminSubscriptionPackageController::class, 'store'])->name('settings.packages.store');
+        Route::get('settings/packages', [AdminSubscriptionPackageController::class, 'index'])->name('settings.packages.index');
+        Route::get('settings/packages/{package}/edit', [AdminSubscriptionPackageController::class, 'edit'])->name('settings.packages.edit');
+        Route::put('settings/packages/{package}', [AdminSubscriptionPackageController::class, 'update'])->name('settings.packages.update');
+        Route::delete('settings/packages/{package}', [AdminSubscriptionPackageController::class, 'destroy'])->name('settings.packages.destroy');
+    });
+
+    // Payment Settings - manage payment settings (Super Admin only)
+    Route::middleware(['permission:manage payment settings'])->group(function () {
+        Route::get('settings/payments', [AdminSettingsController::class, 'payments'])->name('settings.payments');
+        Route::put('settings/payments', [AdminSettingsController::class, 'updatePayments'])->name('settings.payments.update');
+    });
+
+    // Email Settings - manage email settings (Super Admin only)
+    Route::middleware(['permission:manage email settings'])->group(function () {
+        Route::get('settings/email', [AdminSettingsController::class, 'email'])->name('settings.email');
+        Route::put('settings/email', [AdminSettingsController::class, 'updateEmail'])->name('settings.email.update');
+        Route::post('settings/email/test', [AdminSettingsController::class, 'testEmail'])->name('settings.email.test');
+    });
+
+    // AI Settings - manage ai settings (Super Admin only)
+    Route::middleware(['permission:manage ai settings'])->group(function () {
+        Route::get('settings/ai', [AdminSettingsController::class, 'ai'])->name('settings.ai');
+        Route::put('settings/ai', [AdminSettingsController::class, 'updateAi'])->name('settings.ai.update');
+        Route::post('settings/ai/test', [AdminSettingsController::class, 'testAi'])->name('settings.ai.test');
+        Route::delete('settings/ai/disconnect', [AdminSettingsController::class, 'disconnectAi'])->name('settings.ai.disconnect');
+    });
+
+    // Security Settings - manage security settings (Super Admin only)
+    Route::middleware(['permission:manage security settings'])->group(function () {
+        Route::get('settings/recaptcha', [AdminSettingsController::class, 'recaptcha'])->name('settings.recaptcha');
+        Route::put('settings/recaptcha', [AdminSettingsController::class, 'updateRecaptcha'])->name('settings.recaptcha.update');
+        Route::put('settings/security', [AdminSettingsController::class, 'updateSecurity'])->name('settings.security.update');
+    });
+
+    // Maintenance Settings - manage maintenance (Super Admin only)
+    Route::middleware(['permission:manage maintenance'])->group(function () {
+        Route::get('settings/maintenance', [AdminSettingsController::class, 'maintenance'])->name('settings.maintenance');
+        Route::put('settings/maintenance', [AdminSettingsController::class, 'updateMaintenancePage'])->name('settings.maintenance.update');
+        Route::post('settings/maintenance/enable', [AdminSettingsController::class, 'enableMaintenance'])->name('settings.maintenance.enable');
+        Route::post('settings/maintenance/disable', [AdminSettingsController::class, 'disableMaintenance'])->name('settings.maintenance.disable');
+    });
+
+    // System Settings - view system info & clear cache (Super Admin only)
+    Route::middleware(['permission:view system info'])->group(function () {
+        Route::get('settings/system', [AdminSettingsController::class, 'system'])->name('settings.system');
+    });
+    Route::middleware(['permission:clear cache'])->group(function () {
+        Route::post('settings/cache/clear', [AdminSettingsController::class, 'clearCache'])->name('settings.cache.clear');
+        Route::post('settings/config/clear', [AdminSettingsController::class, 'clearConfig'])->name('settings.config.clear');
+        Route::post('settings/routes/clear', [AdminSettingsController::class, 'clearRoutes'])->name('settings.routes.clear');
     });
 
     // Notifications - sending requires 'send notifications' permission
