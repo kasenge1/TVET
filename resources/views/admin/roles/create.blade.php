@@ -89,7 +89,7 @@
                                     <span class="badge bg-{{ $actionColors[$action] ?? 'secondary' }} me-1" style="font-size: 0.65rem;">
                                         <i class="bi {{ $actionIcons[$action] ?? 'bi-check' }}"></i>
                                     </span>
-                                    {{ ucfirst($action) }}
+                                    {{ ucwords($permission->name) }}
                                 </label>
                             </div>
                         </div>

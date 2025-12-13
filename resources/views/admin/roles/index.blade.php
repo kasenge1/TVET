@@ -3,9 +3,11 @@
 @section('page-header', true)
 @section('page-title', 'Role Management')
 @section('page-actions')
+    @can('manage roles')
     <a href="{{ route('admin.roles.create') }}" class="btn-modern btn btn-primary">
         <i class="bi bi-plus-circle me-2"></i>Create New Role
     </a>
+    @endcan
 @endsection
 
 @section('main')
@@ -98,11 +100,18 @@
                                title="View Users">
                                 <i class="bi bi-eye text-primary"></i>
                             </a>
+                            @can('manage roles')
+                            @if($role->name !== 'super-admin')
                             <a href="{{ route('admin.roles.edit', $role) }}"
                                class="btn btn-sm btn-light"
                                title="Edit Permissions">
                                 <i class="bi bi-pencil text-secondary"></i>
                             </a>
+                            @else
+                            <span class="btn btn-sm btn-light disabled" title="System Role - Cannot Edit">
+                                <i class="bi bi-lock text-muted"></i>
+                            </span>
+                            @endif
                             @if(!$isProtected)
                             <form action="{{ route('admin.roles.destroy', $role) }}"
                                   method="POST"
@@ -118,6 +127,7 @@
                                 </button>
                             </form>
                             @endif
+                            @endcan
                         </div>
                     </td>
                 </tr>
@@ -266,6 +276,7 @@
     </div>
 
     <!-- Custom Role Card -->
+    @can('manage roles')
     <div class="col-md-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm border-dashed" style="border: 2px dashed #dee2e6 !important;">
             <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
@@ -280,6 +291,7 @@
             </div>
         </div>
     </div>
+    @endcan
 </div>
 @endsection
 

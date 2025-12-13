@@ -73,8 +73,8 @@ class AdminNotificationController extends Controller
         $sentCount = 0;
 
         if ($targetType === 'all') {
-            // Send to all active users
-            $users = User::where('role', '!=', 'admin')->get();
+            // Send to all students (users with student role)
+            $users = User::role('student')->get();
             foreach ($users as $user) {
                 $this->notificationService->send(
                     $user,
@@ -109,8 +109,8 @@ class AdminNotificationController extends Controller
                 $sentCount++;
             }
         } elseif ($targetType === 'admins') {
-            // Send to all admins
-            $admins = User::where('role', 'admin')->get();
+            // Send to all staff members (admins, content managers, etc.)
+            $admins = User::role(['super-admin', 'admin', 'content-manager', 'question-editor'])->get();
             foreach ($admins as $admin) {
                 $this->notificationService->send(
                     $admin,

@@ -3,9 +3,11 @@
 @section('page-header', true)
 @section('page-title', 'User Management')
 @section('page-actions')
+    @can('create users')
     <a href="{{ route('admin.users.create') }}" class="btn-modern btn btn-primary">
         <i class="bi bi-plus-circle me-2"></i>Add New User
     </a>
+    @endcan
 @endsection
 
 @section('main')
@@ -128,24 +130,29 @@
 <x-card>
 
     <!-- Bulk Actions Bar -->
+    @canany(['edit users', 'delete users'])
     <div id="bulkActionsBar" class="alert alert-primary d-none mb-3">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div>
                 <i class="bi bi-check2-square me-2"></i>
                 <span id="selectedCount">0</span> user(s) selected
+                <small class="text-muted ms-2">(Super Admins are protected and will be skipped)</small>
             </div>
             <div class="d-flex gap-2 flex-wrap">
+                @can('edit users')
                 <div class="dropdown">
                     <button class="btn btn-info btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-gear me-1"></i>Assign Role
                     </button>
                     <ul class="dropdown-menu">
                         @foreach($roles as $role)
+                            @if($role->name !== 'super-admin')
                             <li>
                                 <a class="dropdown-item" href="#" onclick="bulkAction('assign_role', '{{ $role->name }}')">
                                     {{ ucwords(str_replace('-', ' ', $role->name)) }}
                                 </a>
                             </li>
+                            @endif
                         @endforeach
                     </ul>
                 </div>
@@ -155,15 +162,19 @@
                 <button type="button" class="btn btn-success btn-sm" onclick="bulkAction('unblock')">
                     <i class="bi bi-unlock me-1"></i>Unblock
                 </button>
+                @endcan
+                @can('delete users')
                 <button type="button" class="btn btn-danger btn-sm" onclick="bulkAction('delete')">
                     <i class="bi bi-trash me-1"></i>Delete
                 </button>
+                @endcan
                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
                     <i class="bi bi-x-lg me-1"></i>Clear
                 </button>
             </div>
         </div>
     </div>
+    @endcanany
 
     <div class="table-responsive">
         <table class="table-modern table align-middle mb-0">
@@ -272,68 +283,96 @@
                     </td>
                     <td class="text-end">
                         <div class="d-flex gap-1 justify-content-end">
-                            @if($user->hasRole('student') && !$user->hasAnyRole(['super-admin', 'admin', 'content-manager', 'question-editor']))
-                            <form action="{{ route('admin.users.impersonate', $user) }}"
-                                  method="POST"
-                                  class="d-inline impersonate-form">
-                                @csrf
-                                <button type="button"
-                                        class="btn btn-sm btn-light impersonate-btn"
-                                        title="Login as this user"
-                                        data-name="{{ $user->name }}">
-                                    <i class="bi bi-box-arrow-in-right text-info"></i>
-                                </button>
-                            </form>
-                            @endif
-                            <a href="{{ route('admin.users.show', $user) }}"
-                               class="btn btn-sm btn-light"
-                               title="View">
-                                <i class="bi bi-eye text-primary"></i>
-                            </a>
-                            <a href="{{ route('admin.users.edit', $user) }}"
-                               class="btn btn-sm btn-light"
-                               title="Edit">
-                                <i class="bi bi-pencil text-secondary"></i>
-                            </a>
-                            @if($user->id !== auth()->id())
-                                @if($user->is_blocked)
-                                <form action="{{ route('admin.users.unblock', $user) }}"
+                            {{-- Super Admin users have a lock icon - they cannot be modified --}}
+                            @if($user->hasRole('super-admin') && $user->id !== auth()->id())
+                                <span class="btn btn-sm btn-light" title="Protected Super Admin Account">
+                                    <i class="bi bi-shield-lock text-danger"></i>
+                                </span>
+                            @else
+                                {{-- Impersonate button - only for non-staff users --}}
+                                @can('edit users')
+                                @if(!$user->hasRole('super-admin') && $user->hasRole('student') && !$user->hasAnyRole(['admin', 'content-manager', 'question-editor']))
+                                <form action="{{ route('admin.users.impersonate', $user) }}"
                                       method="POST"
-                                      class="d-inline unblock-form">
+                                      class="d-inline impersonate-form">
                                     @csrf
                                     <button type="button"
-                                            class="btn btn-sm btn-light unblock-btn"
-                                            title="Unblock user"
+                                            class="btn btn-sm btn-light impersonate-btn"
+                                            title="Login as this user"
                                             data-name="{{ $user->name }}">
-                                        <i class="bi bi-unlock text-success"></i>
+                                        <i class="bi bi-box-arrow-in-right text-info"></i>
                                     </button>
                                 </form>
-                                @else
-                                <button type="button"
-                                        class="btn btn-sm btn-light block-btn"
-                                        title="Block user"
-                                        data-id="{{ $user->id }}"
-                                        data-name="{{ $user->name }}"
-                                        data-email="{{ $user->email }}">
-                                    <i class="bi bi-slash-circle text-warning"></i>
-                                </button>
                                 @endif
+                                @endcan
+
+                                {{-- View button --}}
+                                <a href="{{ route('admin.users.show', $user) }}"
+                                   class="btn btn-sm btn-light"
+                                   title="View">
+                                    <i class="bi bi-eye text-primary"></i>
+                                </a>
+
+                                {{-- Edit button - only if user can edit and target is not another super-admin --}}
+                                @can('edit users')
+                                @if(!$user->hasRole('super-admin') || $user->id === auth()->id())
+                                <a href="{{ route('admin.users.edit', $user) }}"
+                                   class="btn btn-sm btn-light"
+                                   title="Edit">
+                                    <i class="bi bi-pencil text-secondary"></i>
+                                </a>
+                                @endif
+                                @endcan
+
+                                {{-- Block/Unblock buttons - not for super-admins or self --}}
+                                @can('edit users')
+                                @if($user->id !== auth()->id() && !$user->hasRole('super-admin'))
+                                    @if($user->is_blocked)
+                                    <form action="{{ route('admin.users.unblock', $user) }}"
+                                          method="POST"
+                                          class="d-inline unblock-form">
+                                        @csrf
+                                        <button type="button"
+                                                class="btn btn-sm btn-light unblock-btn"
+                                                title="Unblock user"
+                                                data-name="{{ $user->name }}">
+                                            <i class="bi bi-unlock text-success"></i>
+                                        </button>
+                                    </form>
+                                    @else
+                                    <button type="button"
+                                            class="btn btn-sm btn-light block-btn"
+                                            title="Block user"
+                                            data-id="{{ $user->id }}"
+                                            data-name="{{ $user->name }}"
+                                            data-email="{{ $user->email }}">
+                                        <i class="bi bi-slash-circle text-warning"></i>
+                                    </button>
+                                    @endif
+                                @endif
+                                @endcan
+
+                                {{-- Delete button - not for super-admins or self --}}
+                                @can('delete users')
+                                @if(!$user->hasRole('super-admin'))
+                                <form action="{{ route('admin.users.destroy', $user) }}"
+                                      method="POST"
+                                      class="d-inline delete-form">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button"
+                                            class="btn btn-sm btn-light delete-btn"
+                                            title="Delete"
+                                            data-name="{{ $user->name }}"
+                                            data-email="{{ $user->email }}"
+                                            data-is-self="{{ $user->id === auth()->id() ? 'true' : 'false' }}"
+                                            @if($user->id === auth()->id()) disabled @endif>
+                                        <i class="bi bi-trash text-danger"></i>
+                                    </button>
+                                </form>
+                                @endif
+                                @endcan
                             @endif
-                            <form action="{{ route('admin.users.destroy', $user) }}"
-                                  method="POST"
-                                  class="d-inline delete-form">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button"
-                                        class="btn btn-sm btn-light delete-btn"
-                                        title="Delete"
-                                        data-name="{{ $user->name }}"
-                                        data-email="{{ $user->email }}"
-                                        data-is-self="{{ $user->id === auth()->id() ? 'true' : 'false' }}"
-                                        @if($user->id === auth()->id()) disabled @endif>
-                                    <i class="bi bi-trash text-danger"></i>
-                                </button>
-                            </form>
                         </div>
                     </td>
                 </tr>

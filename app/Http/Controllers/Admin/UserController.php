@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WelcomeCredentialsMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -141,19 +143,36 @@ class UserController extends Controller
             'roles' => 'required|array|min:1',
             'roles.*' => 'exists:roles,name',
             'subscription_tier' => 'required|in:free,premium',
+            'send_credentials' => 'nullable|boolean',
         ]);
+
+        // Store plain password for email before hashing
+        $plainPassword = $validated['password'];
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['email_verified_at'] = now();
 
-        // Remove roles from validated data before creating user
+        // Remove roles and send_credentials from validated data before creating user
         $roles = $validated['roles'];
-        unset($validated['roles']);
+        $sendCredentials = $request->boolean('send_credentials');
+        unset($validated['roles'], $validated['send_credentials']);
 
         $user = User::create($validated);
 
         // Assign roles using Spatie
         $user->syncRoles($roles);
+
+        // Send credentials email if requested
+        if ($sendCredentials) {
+            try {
+                Mail::to($user->email)->send(new WelcomeCredentialsMail($user, $plainPassword));
+                return redirect()->route('admin.users.index')
+                    ->with('success', 'User created successfully! Login credentials have been sent to their email.');
+            } catch (\Exception $e) {
+                return redirect()->route('admin.users.index')
+                    ->with('warning', 'User created successfully, but failed to send credentials email. Please share the login details manually.');
+            }
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User created successfully!');
@@ -182,6 +201,18 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
+        // Prevent editing super-admin users (except by themselves if they are super-admin)
+        if ($user->hasRole('super-admin') && !Auth::user()->hasRole('super-admin')) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Super Admin accounts cannot be edited.');
+        }
+
+        // Even super-admins cannot edit other super-admins
+        if ($user->hasRole('super-admin') && $user->id !== Auth::id()) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'You cannot edit other Super Admin accounts.');
+        }
+
         $roles = Role::orderBy('name')->get();
         return view('admin.users.edit', compact('user', 'roles'));
     }
@@ -191,6 +222,18 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        // Prevent updating super-admin users (except by themselves if they are super-admin)
+        if ($user->hasRole('super-admin') && !Auth::user()->hasRole('super-admin')) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Super Admin accounts cannot be modified.');
+        }
+
+        // Even super-admins cannot update other super-admins
+        if ($user->hasRole('super-admin') && $user->id !== Auth::id()) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'You cannot modify other Super Admin accounts.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
@@ -213,7 +256,12 @@ class UserController extends Controller
         $user->update($validated);
 
         // Sync roles (only if not editing own account's roles)
+        // Also prevent removing super-admin role from super-admin users
         if ($user->id !== Auth::id()) {
+            // If user is super-admin, they must keep the super-admin role
+            if ($user->hasRole('super-admin') && !in_array('super-admin', $roles)) {
+                $roles[] = 'super-admin';
+            }
             $user->syncRoles($roles);
         }
 
@@ -226,6 +274,11 @@ class UserController extends Controller
         // Prevent deleting own account
         if ($user->getKey() === Auth::id()) {
             return back()->with('error', 'You cannot delete your own account!');
+        }
+
+        // Prevent deleting super-admin users
+        if ($user->hasRole('super-admin')) {
+            return back()->with('error', 'Super Admin accounts cannot be deleted.');
         }
 
         $user->delete();
@@ -254,40 +307,53 @@ class UserController extends Controller
         }
 
         $users = User::whereIn('id', $ids)->get();
+
+        // Filter out super-admin users from bulk operations (they are protected)
+        $protectedUsers = $users->filter(fn($user) => $user->hasRole('super-admin'));
+        $users = $users->filter(fn($user) => !$user->hasRole('super-admin'));
+
+        if ($users->isEmpty()) {
+            return back()->with('error', 'No valid users selected. Super Admin accounts cannot be modified via bulk actions.');
+        }
+
         $count = $users->count();
+        $skippedCount = $protectedUsers->count();
+        $skippedMessage = $skippedCount > 0 ? " ({$skippedCount} Super Admin(s) were skipped)" : "";
 
         switch ($validated['action']) {
             case 'assign_role':
                 $roleName = $validated['role'];
+                // Prevent assigning super-admin role via bulk action
+                if ($roleName === 'super-admin') {
+                    return back()->with('error', 'The Super Admin role cannot be assigned via bulk actions.');
+                }
                 foreach ($users as $user) {
                     $user->syncRoles([$roleName]);
                 }
                 $roleDisplayName = ucwords(str_replace('-', ' ', $roleName));
-                $message = "{$count} user(s) assigned to {$roleDisplayName} role!";
+                $message = "{$count} user(s) assigned to {$roleDisplayName} role!{$skippedMessage}";
                 break;
 
             case 'block':
                 $blockedCount = 0;
                 foreach ($users as $user) {
-                    // Skip super-admins
-                    if (!$user->hasRole('super-admin')) {
-                        $user->block('Bulk blocked by admin', Auth::id());
-                        $blockedCount++;
-                    }
+                    $user->block('Bulk blocked by admin', Auth::id());
+                    $blockedCount++;
                 }
-                $message = "{$blockedCount} user(s) blocked successfully!";
+                $message = "{$blockedCount} user(s) blocked successfully!{$skippedMessage}";
                 break;
 
             case 'unblock':
                 foreach ($users as $user) {
                     $user->unblock();
                 }
-                $message = "{$count} user(s) unblocked successfully!";
+                $message = "{$count} user(s) unblocked successfully!{$skippedMessage}";
                 break;
 
             case 'delete':
-                User::whereIn('id', $ids)->delete();
-                $message = "{$count} user(s) deleted successfully!";
+                $idsToDelete = $users->pluck('id')->toArray();
+                User::whereIn('id', $idsToDelete)->delete();
+                $message = "{$count} user(s) deleted successfully!{$skippedMessage}";
                 break;
 
             default:
@@ -307,8 +373,13 @@ class UserController extends Controller
             return back()->with('error', 'You cannot impersonate yourself.');
         }
 
-        // Can't impersonate other admins/staff
-        if ($user->hasAnyRole(['super-admin', 'admin', 'content-manager', 'question-editor'])) {
+        // Can't impersonate super-admins under any circumstances
+        if ($user->hasRole('super-admin')) {
+            return back()->with('error', 'Super Admin accounts cannot be impersonated.');
+        }
+
+        // Can't impersonate other admins/staff (unless you're a super-admin)
+        if ($user->hasAnyRole(['admin', 'content-manager', 'question-editor']) && !Auth::user()->hasRole('super-admin')) {
             return back()->with('error', 'You cannot impersonate staff members.');
         }
 
@@ -340,9 +411,9 @@ class UserController extends Controller
             return back()->with('error', 'You cannot block your own account.');
         }
 
-        // Can't block super-admins
+        // Can't block super-admins - they are protected system users
         if ($user->hasRole('super-admin')) {
-            return back()->with('error', 'Super admins cannot be blocked.');
+            return back()->with('error', 'Super Admin accounts are protected and cannot be blocked.');
         }
 
         $user->block($request->reason, Auth::id());

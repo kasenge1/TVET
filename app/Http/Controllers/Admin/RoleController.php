@@ -48,6 +48,12 @@ class RoleController extends Controller
         // Create slug from name
         $slug = strtolower(str_replace(' ', '-', $validated['name']));
 
+        // Prevent creating a role named super-admin
+        if ($slug === 'super-admin') {
+            return back()->withInput()
+                ->with('error', 'Cannot create a role named "super-admin". This is a protected system role.');
+        }
+
         $role = Role::create([
             'name' => $slug,
             'guard_name' => 'web',
@@ -67,6 +73,12 @@ class RoleController extends Controller
      */
     public function edit(Role $role)
     {
+        // Prevent editing super-admin role entirely
+        if ($role->name === 'super-admin') {
+            return redirect()->route('admin.roles.index')
+                ->with('error', 'The Super Admin role is a system role and cannot be edited.');
+        }
+
         $permissions = Permission::orderBy('name')->get()->groupBy(function ($permission) {
             $parts = explode(' ', $permission->name);
             return end($parts);
@@ -82,30 +94,24 @@ class RoleController extends Controller
      */
     public function update(Request $request, Role $role)
     {
-        // Prevent editing super-admin role name
-        $nameRules = 'required|string|max:255|unique:roles,name,' . $role->id;
+        // Prevent updating super-admin role entirely
         if ($role->name === 'super-admin') {
-            $nameRules = 'nullable';
+            return redirect()->route('admin.roles.index')
+                ->with('error', 'The Super Admin role is a system role and cannot be modified.');
         }
 
         $validated = $request->validate([
-            'name' => $nameRules,
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,name',
         ]);
 
-        // Update role name (except for super-admin)
-        if ($role->name !== 'super-admin' && !empty($validated['name'])) {
-            $slug = strtolower(str_replace(' ', '-', $validated['name']));
-            $role->update(['name' => $slug]);
-        }
+        // Update role name
+        $slug = strtolower(str_replace(' ', '-', $validated['name']));
+        $role->update(['name' => $slug]);
 
-        // Sync permissions (super-admin always gets all permissions)
-        if ($role->name === 'super-admin') {
-            $role->syncPermissions(Permission::all());
-        } else {
-            $role->syncPermissions($validated['permissions'] ?? []);
-        }
+        // Sync permissions
+        $role->syncPermissions($validated['permissions'] ?? []);
 
         return redirect()->route('admin.roles.index')
             ->with('success', "Role updated successfully!");

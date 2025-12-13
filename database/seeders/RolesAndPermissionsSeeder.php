@@ -54,11 +54,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'impersonate users',
             'block users',
 
-            // Role permissions
+            // Role permissions (consolidated)
             'view roles',
             'create roles',
             'edit roles',
             'delete roles',
+            'manage roles', // Combined permission for full role management
 
             // Blog permissions
             'view blog',
@@ -79,6 +80,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit subscriptions',
             'delete subscriptions',
             'manage packages',
+            'manage subscriptions', // Combined permission for full subscription management
 
             // Analytics permissions
             'view analytics',
@@ -109,7 +111,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $superAdmin = Role::firstOrCreate(['name' => 'super-admin']);
         $superAdmin->givePermissionTo(Permission::all());
 
-        // Admin - can manage everything except system settings and impersonation
+        // Admin - can manage everything except system settings, roles management, and impersonation
         $admin = Role::firstOrCreate(['name' => 'admin']);
         $admin->givePermissionTo([
             // Content management
@@ -120,11 +122,11 @@ class RolesAndPermissionsSeeder extends Seeder
             // Blog management
             'view blog', 'create blog', 'edit blog', 'delete blog', 'publish blog',
             'view categories', 'create categories', 'edit categories', 'delete categories',
-            // User management (limited)
+            // User management (limited - no delete, no roles management)
             'view users', 'create users', 'edit users', 'block users',
-            'view roles',
-            // Subscriptions
-            'view subscriptions', 'edit subscriptions',
+            'view roles', // Can view roles but not manage them
+            // Subscriptions (can view and manage)
+            'view subscriptions', 'edit subscriptions', 'manage subscriptions',
             // Dashboard & Reports
             'view dashboard', 'view activity logs', 'view analytics',
             'send notifications',

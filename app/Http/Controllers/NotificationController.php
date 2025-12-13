@@ -30,7 +30,7 @@ class NotificationController extends Controller
         $unreadCount = Notification::where('user_id', $user->id)->unread()->count();
 
         // Determine which view to use based on user role and route
-        if ($user->role === 'admin') {
+        if (request()->routeIs('admin.*') && $user->isAdmin()) {
             $view = 'admin.notifications.index';
         } elseif (request()->routeIs('learn.*')) {
             $view = 'learn.notifications';
@@ -91,7 +91,7 @@ class NotificationController extends Controller
     {
         // Ensure user owns this notification
         if ($notification->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'You do not have permission to access this notification.');
         }
 
         $notification->markAsRead();
@@ -193,7 +193,7 @@ class NotificationController extends Controller
         ];
 
         // Add admin-specific types
-        if ($user->role === 'admin') {
+        if ($user->isAdmin()) {
             $types[Notification::TYPE_NEW_USER] = 'New User Registrations';
             $types[Notification::TYPE_NEW_SUBSCRIPTION] = 'New Subscriptions';
         }
@@ -208,7 +208,7 @@ class NotificationController extends Controller
             ];
         }
 
-        $view = $user->role === 'admin'
+        $view = request()->routeIs('admin.*') && $user->isAdmin()
             ? 'admin.notifications.preferences'
             : 'student.notifications.preferences';
 
