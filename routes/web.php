@@ -201,7 +201,7 @@ Route::middleware(['auth', 'verified'])->prefix('learn')->name('learn.')->group(
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     Route::get('/{unit:slug}', [LearnController::class, 'unit'])->name('unit');
-    Route::get('/{unit:slug}/{question:slug}', [LearnController::class, 'question'])->name('question');
+    Route::get('/{unit:slug}/{questionSlug}', [LearnController::class, 'question'])->name('question');
     Route::post('/bookmark/{question}', [LearnController::class, 'toggleBookmark'])->name('bookmark');
 });
 

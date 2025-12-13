@@ -118,19 +118,23 @@ class LearnController extends Controller
     /**
      * Display a question with its answer.
      */
-    public function question(Unit $unit, Question $question)
+    public function question(Unit $unit, string $questionSlug)
     {
         /** @var User $user */
         $user = Auth::user();
         $enrollment = $user->enrollment;
 
-        // Verify question belongs to student's enrolled course
+        // Verify user is enrolled in this course
         if (!$enrollment || $unit->course_id !== $enrollment->course_id) {
             abort(403, 'You do not have access to this question.');
         }
 
-        // Verify question belongs to this unit
-        if ($question->unit_id !== $unit->id) {
+        // Find question by slug within this unit
+        $question = Question::where('unit_id', $unit->id)
+            ->where('slug', $questionSlug)
+            ->first();
+
+        if (!$question) {
             abort(404);
         }
 
