@@ -35,6 +35,13 @@
         </a>
         @endcan
 
+        @can('view levels')
+        <a href="{{ route('admin.levels.index') }}"
+           class="sidebar-item text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.levels.*') ? 'active' : '' }}">
+            <i class="bi bi-layers me-2"></i> Levels
+        </a>
+        @endcan
+
         @can('view units')
         <a href="{{ route('admin.units.index') }}"
            class="sidebar-item text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.units.*') ? 'active' : '' }}">
@@ -46,13 +53,6 @@
         <a href="{{ route('admin.questions.index') }}"
            class="sidebar-item text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.questions.*') ? 'active' : '' }}">
             <i class="bi bi-question-circle me-2"></i> Questions
-        </a>
-        @endcan
-
-        @can('view levels')
-        <a href="{{ route('admin.levels.index') }}"
-           class="sidebar-item text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.levels.*') ? 'active' : '' }}">
-            <i class="bi bi-layers me-2"></i> Levels
         </a>
         @endcan
 

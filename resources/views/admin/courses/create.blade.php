@@ -22,7 +22,7 @@
                            id="title" 
                            name="title" 
                            value="{{ old('title') }}" 
-                           placeholder="e.g., Electrical Installation Level 4"
+                           placeholder="e.g., Food and Beverage, Electrical Installation"
                            required>
                     @error('title')
                         <div class="invalid-feedback">{{ $message }}</div>
