@@ -18,40 +18,54 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Step 1: Add course_id to levels table
-        Schema::table('levels', function (Blueprint $table) {
-            $table->foreignId('course_id')->nullable()->after('id')->constrained()->onDelete('cascade');
-            $table->string('level_number')->nullable()->after('name'); // e.g., "3", "4", "5"
-        });
+        // Step 1: Add course_id to levels table (if not exists)
+        if (!Schema::hasColumn('levels', 'course_id')) {
+            Schema::table('levels', function (Blueprint $table) {
+                $table->foreignId('course_id')->nullable()->after('id')->constrained()->onDelete('cascade');
+            });
+        }
 
-        // Step 2: Add level_id to units table
-        Schema::table('units', function (Blueprint $table) {
-            $table->foreignId('level_id')->nullable()->after('course_id')->constrained()->onDelete('cascade');
-        });
+        if (!Schema::hasColumn('levels', 'level_number')) {
+            Schema::table('levels', function (Blueprint $table) {
+                $table->string('level_number')->nullable()->after('name'); // e.g., "3", "4", "5"
+            });
+        }
 
-        // Step 3: Create default levels for each existing course
+        // Step 2: Add level_id to units table (if not exists)
+        if (!Schema::hasColumn('units', 'level_id')) {
+            Schema::table('units', function (Blueprint $table) {
+                $table->foreignId('level_id')->nullable()->after('course_id')->constrained()->onDelete('cascade');
+            });
+        }
+
+        // Step 3: Create default levels for each existing course (only if no levels exist for course)
         $courses = DB::table('courses')->get();
         foreach ($courses as $course) {
-            // Create Level 3, 4, 5 for each course
-            foreach ([3, 4, 5] as $levelNum) {
-                $levelId = DB::table('levels')->insertGetId([
-                    'course_id' => $course->id,
-                    'name' => "Level {$levelNum}",
-                    'level_number' => (string) $levelNum,
-                    'slug' => $course->slug . '-level-' . $levelNum,
-                    'description' => "Level {$levelNum} for {$course->title}",
-                    'order' => $levelNum,
-                    'is_active' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            // Check if this course already has levels
+            $existingLevels = DB::table('levels')->where('course_id', $course->id)->count();
 
-                // Assign all existing units of this course to Level 3 by default
-                if ($levelNum === 3) {
-                    DB::table('units')
-                        ->where('course_id', $course->id)
-                        ->whereNull('level_id')
-                        ->update(['level_id' => $levelId]);
+            if ($existingLevels === 0) {
+                // Create Level 3, 4, 5 for each course
+                foreach ([3, 4, 5] as $levelNum) {
+                    $levelId = DB::table('levels')->insertGetId([
+                        'course_id' => $course->id,
+                        'name' => "Level {$levelNum}",
+                        'level_number' => (string) $levelNum,
+                        'slug' => $course->slug . '-level-' . $levelNum,
+                        'description' => "Level {$levelNum} for {$course->title}",
+                        'order' => $levelNum,
+                        'is_active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    // Assign all existing units of this course to Level 3 by default
+                    if ($levelNum === 3) {
+                        DB::table('units')
+                            ->where('course_id', $course->id)
+                            ->whereNull('level_id')
+                            ->update(['level_id' => $levelId]);
+                    }
                 }
             }
         }
