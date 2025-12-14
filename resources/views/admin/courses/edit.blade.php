@@ -26,28 +26,14 @@
                            required>
                 </div>
 
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label for="code" class="form-label fw-medium">Course Code</label>
-                        <input type="text"
-                               class="form-control"
-                               id="code"
-                               name="code"
-                               value="{{ old('code', $course->code) }}">
-                        <small class="text-muted">Optional unique identifier for the course</small>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="level_id" class="form-label fw-medium">Level <span class="text-danger">*</span></label>
-                        <select class="form-select" id="level_id" name="level_id" required>
-                            <option value="">Select Level</option>
-                            @foreach(\App\Models\Level::active()->ordered()->get() as $level)
-                                <option value="{{ $level->id }}" {{ old('level_id', $course->level_id) == $level->id ? 'selected' : '' }}>
-                                    {{ $level->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="mb-4">
+                    <label for="code" class="form-label fw-medium">Course Code</label>
+                    <input type="text"
+                           class="form-control"
+                           id="code"
+                           name="code"
+                           value="{{ old('code', $course->code) }}">
+                    <small class="text-muted">Optional unique identifier for the course</small>
                 </div>
 
                 <x-quill-editor

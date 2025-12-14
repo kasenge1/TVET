@@ -29,38 +29,18 @@
                     @enderror
                 </div>
 
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label for="code" class="form-label fw-medium">Course Code</label>
-                        <input type="text"
-                               class="form-control @error('code') is-invalid @enderror"
-                               id="code"
-                               name="code"
-                               value="{{ old('code') }}"
-                               placeholder="e.g., EI-L4">
-                        @error('code')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted">Optional unique identifier for the course</small>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="level_id" class="form-label fw-medium">Level <span class="text-danger">*</span></label>
-                        <select class="form-select @error('level_id') is-invalid @enderror"
-                                id="level_id"
-                                name="level_id"
-                                required>
-                            <option value="">Select Level</option>
-                            @foreach(\App\Models\Level::active()->ordered()->get() as $level)
-                                <option value="{{ $level->id }}" {{ old('level_id') == $level->id ? 'selected' : '' }}>
-                                    {{ $level->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('level_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div class="mb-4">
+                    <label for="code" class="form-label fw-medium">Course Code</label>
+                    <input type="text"
+                           class="form-control @error('code') is-invalid @enderror"
+                           id="code"
+                           name="code"
+                           value="{{ old('code') }}"
+                           placeholder="e.g., EI-L4">
+                    @error('code')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">Optional unique identifier for the course</small>
                 </div>
 
                 <x-quill-editor

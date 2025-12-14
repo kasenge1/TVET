@@ -40,7 +40,6 @@ class CourseController extends Controller
             'title' => 'required|string|max:255',
             'code' => 'nullable|string|max:50|unique:courses,code',
             'description' => 'nullable|string',
-            'level_id' => 'required|exists:levels,id',
             'thumbnail' => 'nullable|image|max:2048',
         ]);
 
@@ -86,7 +85,6 @@ class CourseController extends Controller
             'title' => 'required|string|max:255',
             'code' => 'nullable|string|max:50|unique:courses,code,' . $course->id,
             'description' => 'nullable|string',
-            'level_id' => 'required|exists:levels,id',
             'thumbnail' => 'nullable|image|max:2048',
         ]);
 
