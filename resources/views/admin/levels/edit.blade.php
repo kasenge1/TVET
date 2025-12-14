@@ -17,6 +17,25 @@
                 @method('PUT')
 
                 <div class="mb-4">
+                    <label for="course_id" class="form-label fw-medium">Course <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-lg @error('course_id') is-invalid @enderror"
+                            id="course_id"
+                            name="course_id"
+                            required>
+                        <option value="">Select a course...</option>
+                        @foreach($courses as $course)
+                            <option value="{{ $course->id }}"
+                                {{ old('course_id', $level->course_id) == $course->id ? 'selected' : '' }}>
+                                {{ $course->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('course_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
                     <label for="name" class="form-label fw-medium">Level Name <span class="text-danger">*</span></label>
                     <input type="text"
                            class="form-control form-control-lg @error('name') is-invalid @enderror"
@@ -27,7 +46,6 @@
                     @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <small class="text-muted">This will be displayed to users</small>
                 </div>
 
                 <div class="mb-4">
@@ -72,8 +90,16 @@
     <div class="col-xl-4">
         <x-card title="Level Statistics">
             <div class="d-flex justify-content-between mb-3">
-                <span class="text-muted">Courses Using This Level</span>
-                <span class="fw-bold">{{ $level->courses()->count() }}</span>
+                <span class="text-muted">Course</span>
+                <span class="fw-bold">{{ $level->course->title ?? '—' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted">Level Number</span>
+                <span class="fw-bold">{{ $level->level_number ?? '—' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted">Units in This Level</span>
+                <span class="fw-bold">{{ $level->units()->count() }}</span>
             </div>
             <div class="d-flex justify-content-between">
                 <span class="text-muted">Created</span>
@@ -81,11 +107,11 @@
             </div>
         </x-card>
 
-        @if($level->courses()->count() > 0)
+        @if($level->units()->count() > 0)
             <x-card title="Warning" class="mt-4 border-warning">
                 <div class="alert alert-warning mb-0">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    This level cannot be deleted because it has {{ $level->courses()->count() }} course(s) assigned to it.
+                    This level cannot be deleted because it has {{ $level->units()->count() }} unit(s) assigned to it.
                 </div>
             </x-card>
         @endif

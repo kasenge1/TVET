@@ -62,9 +62,24 @@
         height: 100vh;
         overflow-y: auto;
         overflow-x: hidden;
+        z-index: 100;
     }
     #page-content-wrapper {
         width: 100%;
+        position: relative;
+    }
+    /* Ensure navbar and dropdowns appear above sidebar and sticky elements */
+    #page-content-wrapper .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+    }
+    #page-content-wrapper .navbar .dropdown-menu {
+        z-index: 1030;
+    }
+    /* Lower z-index for sticky sidebar cards so they don't overlap navbar dropdowns */
+    #page-content-wrapper .sticky-top {
+        z-index: 1010;
     }
     /* Reduce form input size in admin */
     .form-control, .form-select {
@@ -95,11 +110,16 @@
         #sidebar-wrapper {
             position: fixed;
             left: -250px;
-            z-index: 1050;
+            z-index: 1040;
         }
 
         #sidebar-wrapper.show {
             left: 0;
+        }
+
+        /* Ensure navbar dropdown still appears above mobile sidebar */
+        #page-content-wrapper .navbar .dropdown-menu {
+            z-index: 1050;
         }
 
         .container-fluid.p-4 {

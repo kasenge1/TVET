@@ -45,6 +45,7 @@ class Unit extends Model
      */
     protected $fillable = [
         'course_id',
+        'level_id',
         'unit_number',
         'title',
         'slug',
@@ -61,6 +62,7 @@ class Unit extends Model
      */
     protected $casts = [
         'unit_number' => 'integer',
+        'level_id' => 'integer',
         'exam_month' => 'integer',
         'exam_year' => 'integer',
         'order' => 'integer',
@@ -99,7 +101,15 @@ class Unit extends Model
     }
 
     /**
-     * Get the course that owns this unit.
+     * Get the level that owns this unit.
+     */
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class);
+    }
+
+    /**
+     * Get the course that owns this unit (through level or direct).
      */
     public function course(): BelongsTo
     {

@@ -116,25 +116,61 @@ if ($course->level_display) {
                 </div>
                 @endif
 
-                <!-- Units List -->
+                <!-- Levels and Units List -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <h4 class="fw-bold mb-4">Course Units</h4>
+                        <h4 class="fw-bold mb-4">Course Content</h4>
 
-                        @if($course->units->count() > 0)
-                        <div class="d-flex flex-column gap-3">
-                            @foreach($course->units as $index => $unit)
-                            <div class="border rounded-3 p-3 d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 36px; height: 36px; min-width: 36px; font-size: 0.9rem;">
-                                        {{ $index + 1 }}
+                        @if($course->levels->count() > 0)
+                        <div class="accordion" id="levelsAccordion">
+                            @foreach($course->levels as $levelIndex => $level)
+                            <div class="accordion-item border mb-3 rounded-3 overflow-hidden">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button {{ $levelIndex === 0 ? '' : 'collapsed' }} fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#level{{ $level->id }}" aria-expanded="{{ $levelIndex === 0 ? 'true' : 'false' }}">
+                                        <div class="d-flex align-items-center w-100 justify-content-between me-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 36px; height: 36px; min-width: 36px; font-size: 0.85rem;">
+                                                    {{ $level->level_number ?? ($levelIndex + 1) }}
+                                                </div>
+                                                <span>{{ $level->name }}</span>
+                                            </div>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill me-2">
+                                                {{ $level->units->count() }} {{ Str::plural('Unit', $level->units->count()) }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="level{{ $level->id }}" class="accordion-collapse collapse {{ $levelIndex === 0 ? 'show' : '' }}" data-bs-parent="#levelsAccordion">
+                                    <div class="accordion-body pt-0">
+                                        @if($level->units->count() > 0)
+                                        <div class="d-flex flex-column gap-2">
+                                            @foreach($level->units as $unitIndex => $unit)
+                                            <div class="border rounded-3 p-3 d-flex align-items-center justify-content-between" style="background-color: #f8f9fa;">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-secondary bg-opacity-25 text-dark rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 28px; height: 28px; min-width: 28px; font-size: 0.75rem;">
+                                                        {{ $unit->unit_number ?? ($unitIndex + 1) }}
+                                                    </div>
+                                                    <div>
+                                                        <span class="fw-medium text-dark">{{ $unit->title }}</span>
+                                                        @if($unit->exam_month && $unit->exam_year)
+                                                        <small class="text-muted d-block">{{ \App\Models\Unit::MONTHS[$unit->exam_month] ?? '' }} {{ $unit->exam_year }}</small>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill">
+                                                        <i class="bi bi-question-circle me-1"></i>{{ $unit->questions_count }} Questions
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        @else
+                                        <div class="text-center py-3">
+                                            <p class="text-muted mb-0 small">No units available in this level yet.</p>
+                                        </div>
+                                        @endif
                                     </div>
-                                    <span class="fw-medium text-dark">{{ $unit->title }}</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
-                                        <i class="bi bi-question-circle me-1"></i>{{ $unit->questions_count }} Questions
-                                    </span>
                                 </div>
                             </div>
                             @endforeach
@@ -142,7 +178,7 @@ if ($course->level_display) {
                         @else
                         <div class="text-center py-4">
                             <i class="bi bi-inbox display-4 text-muted opacity-50"></i>
-                            <p class="text-muted mt-2 mb-0">No units available yet.</p>
+                            <p class="text-muted mt-2 mb-0">No content available yet.</p>
                         </div>
                         @endif
                     </div>
@@ -204,11 +240,8 @@ if ($course->level_display) {
 @php
     $relatedCourses = \App\Models\Course::where('is_published', true)
         ->where('id', '!=', $course->id)
-        ->when($course->level_id, function($query) use ($course) {
-            return $query->where('level_id', $course->level_id);
-        })
         ->withCount('units')
-        ->with('levelRelation')
+        ->with('levels')
         ->take(3)
         ->get();
 @endphp

@@ -17,14 +17,33 @@
 
                 <div class="mb-4">
                     <label for="course_id" class="form-label fw-medium">Course <span class="text-danger">*</span></label>
-                    <select class="form-select form-select-lg" id="course_id" name="course_id" required>
+                    <select class="form-select form-select-lg @error('course_id') is-invalid @enderror" id="course_id" name="course_id" required>
                         <option value="">Select a course</option>
                         @foreach($courses as $course)
                             <option value="{{ $course->id }}" {{ old('course_id', $selectedCourse?->id) == $course->id ? 'selected' : '' }}>
-                                {{ $course->title }} ({{ $course->code }})
+                                {{ $course->title }}
                             </option>
                         @endforeach
                     </select>
+                    @error('course_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="level_id" class="form-label fw-medium">Level <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-lg @error('level_id') is-invalid @enderror" id="level_id" name="level_id" required>
+                        <option value="">Select a level</option>
+                        @foreach($levels as $level)
+                            <option value="{{ $level->id }}" {{ old('level_id', $selectedLevel?->id) == $level->id ? 'selected' : '' }}>
+                                {{ $level->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('level_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">Levels are loaded based on the selected course</small>
                 </div>
 
                 <div class="mb-4">
@@ -94,11 +113,15 @@
                 </li>
                 <li class="mb-3">
                     <i class="bi bi-lightbulb text-warning me-2"></i>
+                    <strong>Level:</strong> Select the level within the course (e.g., Level 3, Level 4)
+                </li>
+                <li class="mb-3">
+                    <i class="bi bi-lightbulb text-warning me-2"></i>
                     <strong>Title:</strong> Be clear and descriptive about the topic
                 </li>
                 <li>
                     <i class="bi bi-lightbulb text-warning me-2"></i>
-                    <strong>Description:</strong> Explain what students will learn in this unit
+                    <strong>Exam Period:</strong> Specify when the exam paper was administered
                 </li>
             </ul>
         </x-card>
@@ -106,9 +129,46 @@
         @if($selectedCourse)
             <x-card title="Selected Course" class="mt-4">
                 <h6>{{ $selectedCourse->title }}</h6>
-                <p class="text-muted mb-0">{{ $selectedCourse->code }}</p>
+                @if($selectedLevel)
+                    <p class="text-muted mb-0">{{ $selectedLevel->name }}</p>
+                @endif
             </x-card>
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const courseSelect = document.getElementById('course_id');
+    const levelSelect = document.getElementById('level_id');
+
+    courseSelect.addEventListener('change', function() {
+        const courseId = this.value;
+        levelSelect.innerHTML = '<option value="">Loading...</option>';
+
+        if (!courseId) {
+            levelSelect.innerHTML = '<option value="">Select a level</option>';
+            return;
+        }
+
+        fetch('/admin/api/courses/' + courseId + '/levels')
+            .then(response => response.json())
+            .then(levels => {
+                levelSelect.innerHTML = '<option value="">Select a level</option>';
+                levels.forEach(level => {
+                    const option = document.createElement('option');
+                    option.value = level.id;
+                    option.textContent = level.name;
+                    levelSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading levels:', error);
+                levelSelect.innerHTML = '<option value="">Error loading levels</option>';
+            });
+    });
+});
+</script>
+@endpush

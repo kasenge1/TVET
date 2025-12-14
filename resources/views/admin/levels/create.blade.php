@@ -16,18 +16,37 @@
                 @csrf
 
                 <div class="mb-4">
+                    <label for="course_id" class="form-label fw-medium">Course <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-lg @error('course_id') is-invalid @enderror"
+                            id="course_id"
+                            name="course_id"
+                            required>
+                        <option value="">Select a course...</option>
+                        @foreach($courses as $course)
+                            <option value="{{ $course->id }}"
+                                {{ (old('course_id') == $course->id || ($selectedCourse && $selectedCourse->id == $course->id)) ? 'selected' : '' }}>
+                                {{ $course->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('course_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
                     <label for="name" class="form-label fw-medium">Level Name <span class="text-danger">*</span></label>
                     <input type="text"
                            class="form-control form-control-lg @error('name') is-invalid @enderror"
                            id="name"
                            name="name"
                            value="{{ old('name') }}"
-                           placeholder="e.g., Advanced Diploma"
+                           placeholder="e.g., Level 3"
                            required>
                     @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <small class="text-muted">This will be displayed to users</small>
+                    <small class="text-muted">Level number will be assigned automatically</small>
                 </div>
 
                 <div class="mb-4">
@@ -75,15 +94,15 @@
             <ul class="list-unstyled mb-0">
                 <li class="mb-3">
                     <i class="bi bi-lightbulb text-warning me-2"></i>
-                    <strong>Level Name:</strong> Use clear, standard naming (e.g., Certificate, Diploma)
+                    <strong>Course:</strong> Select the course this level belongs to
                 </li>
                 <li class="mb-3">
                     <i class="bi bi-lightbulb text-warning me-2"></i>
-                    <strong>Description:</strong> Provide a brief explanation of this level
+                    <strong>Level Name:</strong> Use clear naming (e.g., Level 3, Level 4, Level 5)
                 </li>
                 <li>
                     <i class="bi bi-lightbulb text-warning me-2"></i>
-                    <strong>Status:</strong> Inactive levels won't appear in course creation forms
+                    <strong>Status:</strong> Inactive levels won't appear in unit creation forms
                 </li>
             </ul>
         </x-card>

@@ -16,21 +16,28 @@
                 @csrf
 
                 <div class="mb-4">
+                    <label for="course_id" class="form-label fw-medium">Course <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-lg" id="course_id" name="course_id" required>
+                        <option value="">Select a course</option>
+                        @foreach(\App\Models\Course::orderBy('title')->get() as $course)
+                            <option value="{{ $course->id }}" {{ old('course_id', request('course')) == $course->id ? 'selected' : '' }}>
+                                {{ $course->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="level_id" class="form-label fw-medium">Level <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-lg" id="level_id" name="level_id" required>
+                        <option value="">Select a level</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
                     <label for="unit_id" class="form-label fw-medium">Unit <span class="text-danger">*</span></label>
                     <select class="form-select form-select-lg" id="unit_id" name="unit_id" required>
                         <option value="">Select a unit</option>
-                        @foreach(\App\Models\Course::with('units')->get() as $course)
-                            <optgroup label="{{ $course->title }}">
-                                @foreach($course->units as $unit)
-                                    <option value="{{ $unit->id }}"
-                                            {{ old('unit_id', request('unit')) == $unit->id ? 'selected' : '' }}
-                                            data-course="{{ $course->title }}"
-                                            data-unit="{{ $unit->unit_number }}">
-                                        Unit {{ $unit->unit_number }}: {{ $unit->title }}
-                                    </option>
-                                @endforeach
-                            </optgroup>
-                        @endforeach
                     </select>
                     @error('unit_id')
                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -365,6 +372,72 @@ function getNextSubQuestionLetter(parentId) {
     return String.fromCharCode(97 + count);
 }
 
+// Cascading dropdown: Course -> Level -> Unit
+document.getElementById('course_id').addEventListener('change', function() {
+    const courseId = this.value;
+    const levelSelect = document.getElementById('level_id');
+    const unitSelect = document.getElementById('unit_id');
+    const parentSelect = document.getElementById('parent_question_id');
+
+    // Reset level, unit, and parent dropdowns
+    levelSelect.innerHTML = '<option value="">Loading...</option>';
+    unitSelect.innerHTML = '<option value="">Select a unit</option>';
+    parentSelect.innerHTML = '<option value="">Main Question (New numbered question)</option>';
+
+    if (!courseId) {
+        levelSelect.innerHTML = '<option value="">Select a level</option>';
+        return;
+    }
+
+    fetch('/admin/api/courses/' + courseId + '/levels')
+        .then(response => response.json())
+        .then(levels => {
+            levelSelect.innerHTML = '<option value="">Select a level</option>';
+            levels.forEach(level => {
+                const option = document.createElement('option');
+                option.value = level.id;
+                option.textContent = level.name;
+                levelSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading levels:', error);
+            levelSelect.innerHTML = '<option value="">Error loading levels</option>';
+        });
+});
+
+// Level change -> Load units
+document.getElementById('level_id').addEventListener('change', function() {
+    const levelId = this.value;
+    const unitSelect = document.getElementById('unit_id');
+    const parentSelect = document.getElementById('parent_question_id');
+
+    // Reset unit and parent dropdowns
+    unitSelect.innerHTML = '<option value="">Loading...</option>';
+    parentSelect.innerHTML = '<option value="">Main Question (New numbered question)</option>';
+
+    if (!levelId) {
+        unitSelect.innerHTML = '<option value="">Select a unit</option>';
+        return;
+    }
+
+    fetch('/admin/api/levels/' + levelId + '/units')
+        .then(response => response.json())
+        .then(units => {
+            unitSelect.innerHTML = '<option value="">Select a unit</option>';
+            units.forEach(unit => {
+                const option = document.createElement('option');
+                option.value = unit.id;
+                option.textContent = (unit.unit_number ? 'Unit ' + unit.unit_number + ': ' : '') + unit.title;
+                unitSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading units:', error);
+            unitSelect.innerHTML = '<option value="">Error loading units</option>';
+        });
+});
+
 // Update parent questions dropdown when unit changes
 document.getElementById('unit_id').addEventListener('change', function() {
     const unitId = this.value;
@@ -505,22 +578,71 @@ function generateAnswer() {
     });
 }
 
-// Initialize on page load (if unit is pre-selected)
+// Initialize on page load (pre-select course/level/unit from URL params)
 document.addEventListener('DOMContentLoaded', function() {
-    const unitSelect = document.getElementById('unit_id');
-    if (unitSelect.value) {
-        unitSelect.dispatchEvent(new Event('change'));
-    }
-
-    // Also check for pre-selected parent from URL
     const urlParams = new URLSearchParams(window.location.search);
+    const unitId = urlParams.get('unit');
+    const levelId = urlParams.get('level');
+    const courseId = urlParams.get('course');
     const parentId = urlParams.get('parent');
-    if (parentId) {
-        setTimeout(() => {
-            const parentSelect = document.getElementById('parent_question_id');
-            parentSelect.value = parentId;
-            updateQuestionNumber();
-        }, 100);
+
+    // If unit is specified, we need to load the chain: course -> level -> unit
+    if (unitId) {
+        // Fetch unit info to get course and level
+        fetch('/admin/api/units/' + unitId + '/info')
+            .then(response => response.json())
+            .then(unitInfo => {
+                const courseSelect = document.getElementById('course_id');
+                const levelSelect = document.getElementById('level_id');
+                const unitSelect = document.getElementById('unit_id');
+
+                // Set course
+                courseSelect.value = unitInfo.course_id;
+
+                // Load levels for this course
+                return fetch('/admin/api/courses/' + unitInfo.course_id + '/levels')
+                    .then(response => response.json())
+                    .then(levels => {
+                        levelSelect.innerHTML = '<option value="">Select a level</option>';
+                        levels.forEach(level => {
+                            const option = document.createElement('option');
+                            option.value = level.id;
+                            option.textContent = level.name;
+                            levelSelect.appendChild(option);
+                        });
+                        levelSelect.value = unitInfo.level_id;
+
+                        // Load units for this level
+                        return fetch('/admin/api/levels/' + unitInfo.level_id + '/units');
+                    })
+                    .then(response => response.json())
+                    .then(units => {
+                        unitSelect.innerHTML = '<option value="">Select a unit</option>';
+                        units.forEach(unit => {
+                            const option = document.createElement('option');
+                            option.value = unit.id;
+                            option.textContent = (unit.unit_number ? 'Unit ' + unit.unit_number + ': ' : '') + unit.title;
+                            unitSelect.appendChild(option);
+                        });
+                        unitSelect.value = unitId;
+                        unitSelect.dispatchEvent(new Event('change'));
+
+                        // Handle parent selection if provided
+                        if (parentId) {
+                            setTimeout(() => {
+                                const parentSelect = document.getElementById('parent_question_id');
+                                parentSelect.value = parentId;
+                                updateQuestionNumber();
+                            }, 100);
+                        }
+                    });
+            })
+            .catch(error => console.error('Error loading unit info:', error));
+    } else if (courseId) {
+        // Only course specified - trigger course change
+        const courseSelect = document.getElementById('course_id');
+        courseSelect.value = courseId;
+        courseSelect.dispatchEvent(new Event('change'));
     }
 });
 

@@ -38,7 +38,12 @@ class Course extends Model
                 Storage::disk('public')->delete($course->thumbnail_url);
             }
 
-            // Delete all units (this will trigger their deleting events which will delete questions)
+            // Delete all levels (cascade will delete units and questions)
+            foreach ($course->levels as $level) {
+                $level->delete();
+            }
+
+            // Delete any units directly attached to course (legacy)
             foreach ($course->units as $unit) {
                 $unit->delete();
             }
@@ -56,8 +61,6 @@ class Course extends Model
         'code',
         'description',
         'thumbnail_url',
-        'level',
-        'level_id',
         'is_published',
         'created_by',
     ];
@@ -80,30 +83,11 @@ class Course extends Model
     }
 
     /**
-     * Get the level relationship for this course.
-     * Note: Use levelRelation() to avoid conflict with the 'level' attribute (enum string)
+     * Get all levels for this course.
      */
-    public function levelRelation(): BelongsTo
+    public function levels(): HasMany
     {
-        return $this->belongsTo(Level::class, 'level_id');
-    }
-
-    /**
-     * Get the display name for the level (handles both string enum and relationship)
-     */
-    public function getLevelDisplayAttribute(): string
-    {
-        // First try to get from the Level relationship
-        if ($this->level_id && $this->levelRelation) {
-            return $this->levelRelation->name;
-        }
-
-        // Fallback to the level enum string with formatted display
-        if ($this->attributes['level'] ?? null) {
-            return ucwords(str_replace('_', ' ', $this->attributes['level']));
-        }
-
-        return '';
+        return $this->hasMany(Level::class)->orderBy('order');
     }
 
     /**
@@ -152,5 +136,27 @@ class Course extends Model
     public function getStudentCountAttribute()
     {
         return $this->enrollments()->count();
+    }
+
+    /**
+     * Get a display string for the course levels.
+     * Shows levels like "Level 3, 4, 5" or returns null if no levels.
+     * This is for backwards compatibility with views that used level_display.
+     */
+    public function getLevelDisplayAttribute(): ?string
+    {
+        $levels = $this->levels;
+        if ($levels->isEmpty()) {
+            return null;
+        }
+
+        // If levels have level_number, use that for a concise display
+        $levelNumbers = $levels->pluck('level_number')->filter()->sort()->values();
+        if ($levelNumbers->isNotEmpty()) {
+            return 'Level ' . $levelNumbers->implode(', ');
+        }
+
+        // Otherwise, use level names
+        return $levels->pluck('name')->implode(', ');
     }
 }

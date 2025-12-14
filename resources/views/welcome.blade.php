@@ -174,7 +174,7 @@ $heroSettings = \App\Models\SiteSetting::getHeroSettings();
 @php
     $popularCourses = \App\Models\Course::where('is_published', true)
         ->withCount(['units', 'enrollments'])
-        ->with('levelRelation')
+        ->with('levels')
         ->orderByDesc('enrollments_count')
         ->take(3)
         ->get();

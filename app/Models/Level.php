@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Level extends Model
 {
     protected $fillable = [
+        'course_id',
         'name',
+        'level_number',
         'slug',
         'description',
         'order',
@@ -20,11 +23,19 @@ class Level extends Model
     ];
 
     /**
-     * Get all courses for this level
+     * Get the course that owns this level
      */
-    public function courses(): HasMany
+    public function course(): BelongsTo
     {
-        return $this->hasMany(Course::class);
+        return $this->belongsTo(Course::class);
+    }
+
+    /**
+     * Get all units for this level
+     */
+    public function units(): HasMany
+    {
+        return $this->hasMany(Unit::class)->orderBy('order');
     }
 
     /**
@@ -41,5 +52,13 @@ class Level extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('order');
+    }
+
+    /**
+     * Get total questions count across all units in this level
+     */
+    public function getTotalQuestionsAttribute(): int
+    {
+        return $this->units()->withCount('questions')->get()->sum('questions_count');
     }
 }

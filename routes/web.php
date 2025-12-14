@@ -55,14 +55,9 @@ Route::get('/', function () {
 Route::get('/courses', function (\Illuminate\Http\Request $request) {
     $query = \App\Models\Course::where('is_published', true)
         ->withCount(['units'])
-        ->with(['levelRelation', 'units' => function($q) {
+        ->with(['levels', 'units' => function($q) {
             $q->withCount('questions');
         }]);
-
-    // Filter by level if provided
-    if ($request->filled('level')) {
-        $query->where('level_id', $request->level);
-    }
 
     // Search by title if provided
     if ($request->filled('search')) {
@@ -99,11 +94,11 @@ Route::get('/courses/{course:slug}', function (\App\Models\Course $course) {
         abort(404);
     }
 
-    $course->load(['levelRelation', 'units' => function($query) {
+    $course->load(['levels.units' => function($query) {
         $query->withCount('questions')->orderBy('unit_number');
     }]);
 
-    $totalQuestions = $course->units->sum('questions_count');
+    $totalQuestions = $course->levels->flatMap->units->sum('questions_count');
 
     return view('courses.show', compact('course', 'totalQuestions'));
 })->name('courses.show');
@@ -288,6 +283,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:delete courses'])->group(function () {
         Route::delete('levels/{level}', [AdminLevelController::class, 'destroy'])->name('levels.destroy');
     });
+    // API endpoint for getting levels by course (for cascading dropdowns)
+    Route::get('api/courses/{course}/levels', [AdminLevelController::class, 'getLevelsForCourse'])->name('api.course.levels');
 
     // Blog Management - requires blog permissions
     // IMPORTANT: Static routes must come BEFORE parameter routes
@@ -344,6 +341,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:delete units'])->group(function () {
         Route::delete('units/{unit}', [AdminUnitController::class, 'destroy'])->name('units.destroy');
     });
+    // API endpoints for cascading dropdowns
+    Route::get('api/levels/{level}/units', [AdminUnitController::class, 'getUnitsForLevel'])->name('api.level.units');
+    Route::get('api/units/{unit}/info', [AdminUnitController::class, 'getUnitInfo'])->name('api.unit.info');
 
     // Questions Management - requires question permissions
     // IMPORTANT: Static routes must come BEFORE parameter routes
