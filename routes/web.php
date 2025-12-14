@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LearnController;
 use App\Http\Controllers\ProfileController;
@@ -109,11 +110,8 @@ Route::get('/about', function () {
     return view('pages.about', compact('contact', 'social'));
 })->name('about');
 
-Route::get('/contact', function () {
-    $contact = \App\Models\SiteSetting::getContactSettings();
-    $social = \App\Models\SiteSetting::getSocialSettings();
-    return view('pages.contact', compact('contact', 'social'));
-})->name('contact');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 Route::get('/privacy-policy', function () {
     return view('pages.privacy-policy');
