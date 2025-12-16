@@ -112,7 +112,10 @@
                     <select class="form-select form-select-lg" id="parent_question_id" name="parent_question_id">
                         <option value="">Main Question (New numbered question)</option>
                     </select>
-                    <small class="text-muted">Select a parent to create a sub-question (a, b, c...)</small>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>Select a parent to create a sub-question (a, b, c...).
+                        Only shows questions from the selected exam period.
+                    </small>
                 </div>
 
                 <!-- Auto-generated Question Number Display -->
@@ -481,36 +484,64 @@ document.getElementById('level_id').addEventListener('change', function() {
 
 // Update parent questions dropdown when unit changes
 document.getElementById('unit_id').addEventListener('change', function() {
-    const unitId = this.value;
+    updateParentQuestionsDropdown();
+    // Update auto-generated question number
+    updateQuestionNumber();
+});
+
+// Function to update parent questions dropdown based on unit AND exam period
+function updateParentQuestionsDropdown() {
+    const unitId = document.getElementById('unit_id').value;
+    const examPeriodId = document.getElementById('exam_period_id').value;
     const parentSelect = document.getElementById('parent_question_id');
 
     // Clear existing options except the first one
     parentSelect.innerHTML = '<option value="">Main Question (New numbered question)</option>';
 
-    if (unitId) {
-        // Filter parent questions for this unit
-        const unitQuestions = parentQuestionsData.filter(q => q.unit_id == unitId);
+    if (unitId && examPeriodId) {
+        // Filter parent questions for this unit AND exam period
+        const filteredQuestions = parentQuestionsData.filter(q =>
+            q.unit_id == unitId && q.exam_period_id == examPeriodId
+        );
 
-        unitQuestions.forEach(q => {
+        if (filteredQuestions.length === 0) {
+            // No existing questions in this period - show helpful message
             const option = document.createElement('option');
-            option.value = q.id;
-            option.dataset.questionNumber = q.question_number;
-            // Strip HTML tags for display
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = q.question_text;
-            const plainText = tempDiv.textContent || tempDiv.innerText;
-            option.textContent = `Q${q.question_number}: ${plainText.substring(0, 50)}${plainText.length > 50 ? '...' : ''}`;
+            option.disabled = true;
+            option.textContent = '-- No existing questions in this exam period --';
             parentSelect.appendChild(option);
-        });
+        } else {
+            filteredQuestions.forEach(q => {
+                const option = document.createElement('option');
+                option.value = q.id;
+                option.dataset.questionNumber = q.question_number;
+                // Strip HTML tags for display
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = q.question_text;
+                const plainText = tempDiv.textContent || tempDiv.innerText;
+                // Show period number for clarity
+                const periodNum = q.period_question_number || '?';
+                option.textContent = `#${periodNum}: ${plainText.substring(0, 50)}${plainText.length > 50 ? '...' : ''}`;
+                parentSelect.appendChild(option);
+            });
+        }
+    } else if (unitId) {
+        // Unit selected but no exam period - prompt user
+        const option = document.createElement('option');
+        option.disabled = true;
+        option.textContent = '-- Select an exam period first --';
+        parentSelect.appendChild(option);
     }
+}
 
-    // Update auto-generated question number
+// Update question number when parent changes
+document.getElementById('parent_question_id').addEventListener('change', updateQuestionNumber);
+
+// Update both parent questions dropdown AND question number when exam period changes
+document.getElementById('exam_period_id').addEventListener('change', function() {
+    updateParentQuestionsDropdown();
     updateQuestionNumber();
 });
-
-// Update question number when parent or exam period changes
-document.getElementById('parent_question_id').addEventListener('change', updateQuestionNumber);
-document.getElementById('exam_period_id').addEventListener('change', updateQuestionNumber);
 
 function updateQuestionNumber() {
     const unitSelect = document.getElementById('unit_id');
