@@ -73,6 +73,9 @@ class Question extends Model
      */
     protected $fillable = [
         'unit_id',
+        'exam_period_id',
+        'exam_month',
+        'exam_year',
         'question_type',
         'video_url',
         'question_number',
@@ -99,7 +102,77 @@ class Question extends Model
         'ai_generated' => 'boolean',
         'order' => 'integer',
         'view_count' => 'integer',
+        'exam_month' => 'integer',
+        'exam_year' => 'integer',
     ];
+
+    /**
+     * Get the exam period as a formatted string (e.g., "July 2024").
+     * Uses the ExamPeriod relationship if available, falls back to legacy fields.
+     */
+    public function getExamPeriodLabelAttribute(): ?string
+    {
+        // First try to use the ExamPeriod relationship
+        if ($this->exam_period_id && $this->relationLoaded('examPeriod') && $this->examPeriod) {
+            return $this->examPeriod->name;
+        }
+
+        // Fallback to legacy exam_month/exam_year fields
+        if (!$this->exam_month || !$this->exam_year) {
+            return null;
+        }
+
+        $months = [
+            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+            5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+            9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+        ];
+
+        return ($months[$this->exam_month] ?? '') . ' ' . $this->exam_year;
+    }
+
+    /**
+     * Get the exam period key for grouping (e.g., "2024-07").
+     * Uses the ExamPeriod relationship if available, falls back to legacy fields.
+     */
+    public function getExamPeriodKeyAttribute(): ?string
+    {
+        // First try to use the ExamPeriod relationship
+        if ($this->exam_period_id && $this->relationLoaded('examPeriod') && $this->examPeriod) {
+            return $this->examPeriod->period_key;
+        }
+
+        // Fallback to legacy exam_month/exam_year fields
+        if (!$this->exam_month || !$this->exam_year) {
+            return null;
+        }
+
+        return $this->exam_year . '-' . str_pad($this->exam_month, 2, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Scope a query to filter by exam period ID.
+     */
+    public function scopeForExamPeriod($query, $examPeriodId)
+    {
+        return $query->where('exam_period_id', $examPeriodId);
+    }
+
+    /**
+     * Scope a query to filter by exam period (legacy).
+     */
+    public function scopeExamPeriod($query, $month, $year)
+    {
+        return $query->where('exam_month', $month)->where('exam_year', $year);
+    }
+
+    /**
+     * Scope a query to filter by exam year (legacy).
+     */
+    public function scopeExamYear($query, $year)
+    {
+        return $query->where('exam_year', $year);
+    }
 
     /**
      * Get the unit that owns this question.
@@ -107,6 +180,14 @@ class Question extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    /**
+     * Get the exam period for this question.
+     */
+    public function examPeriod(): BelongsTo
+    {
+        return $this->belongsTo(ExamPeriod::class);
     }
 
     /**

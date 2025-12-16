@@ -19,7 +19,7 @@
 <x-card class="mb-4">
     <form method="GET" action="{{ route('admin.questions.index') }}">
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="course_filter" class="form-label">Filter by Course</label>
                 <select name="course" id="course_filter" class="form-select" onchange="this.form.submit()">
                     <option value="">All Courses</option>
@@ -30,7 +30,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="unit_filter" class="form-label">Filter by Unit</label>
                 <select name="unit" id="unit_filter" class="form-select" onchange="this.form.submit()">
                     <option value="">All Units</option>
@@ -43,11 +43,29 @@
                     @endif
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <label for="exam_period_filter" class="form-label">Filter by Exam Period</label>
+                <select name="exam_period" id="exam_period_filter" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Exam Periods</option>
+                    @foreach(\App\Models\ExamPeriod::ordered()->get() as $period)
+                        <option value="{{ $period->id }}" {{ request('exam_period') == $period->id ? 'selected' : '' }}>
+                            {{ $period->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
                 <label for="search" class="form-label">Search Questions</label>
-                <input type="text" name="search" id="search" class="form-control" placeholder="Search by question text..." value="{{ request('search') }}">
+                <input type="text" name="search" id="search" class="form-control" placeholder="Search..." value="{{ request('search') }}">
             </div>
         </div>
+        @if(request('course') || request('unit') || request('exam_period') || request('search'))
+            <div class="mt-3">
+                <a href="{{ route('admin.questions.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Clear All Filters
+                </a>
+            </div>
+        @endif
     </form>
 </x-card>
 
@@ -80,13 +98,14 @@
                     <th width="70">Q#</th>
                     <th>Question</th>
                     <th>Unit</th>
+                    <th>Exam Period</th>
                     <th class="text-center">Answer</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
         <tbody>
             @php
-                $query = \App\Models\Question::with(['unit.course'])
+                $query = \App\Models\Question::with(['unit.course', 'examPeriod'])
                     ->whereNull('parent_question_id');
 
                 if (request('course')) {
@@ -97,6 +116,10 @@
 
                 if (request('unit')) {
                     $query->where('unit_id', request('unit'));
+                }
+
+                if (request('exam_period')) {
+                    $query->where('exam_period_id', request('exam_period'));
                 }
 
                 if (request('search')) {
@@ -138,6 +161,15 @@
                 <td>
                     <span class="small text-muted">Unit {{ $question->unit->unit_number }}</span>
                 </td>
+                <td>
+                    @if($question->examPeriod)
+                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                            {{ $question->examPeriod->name }}
+                        </span>
+                    @else
+                        <span class="text-muted">—</span>
+                    @endif
+                </td>
                 <td class="text-center">
                     @if($question->answer_text)
                         <i class="bi bi-check-circle-fill text-success"></i>
@@ -176,7 +208,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center py-5">
+                <td colspan="7" class="text-center py-5">
                     <i class="bi bi-question-circle display-3 text-muted d-block mb-3"></i>
                     <h5 class="text-muted">No questions found</h5>
                     <p class="text-muted mb-3">Get started by creating your first question</p>

@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogControll
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\Admin\ExamPeriodController as AdminExamPeriodController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -372,6 +373,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     Route::middleware(['permission:delete questions'])->group(function () {
         Route::delete('questions/{question}', [AdminQuestionController::class, 'destroy'])->name('questions.destroy');
+    });
+
+    // Exam Periods Management - uses same permissions as questions
+    Route::middleware(['permission:create questions'])->group(function () {
+        Route::get('exam-periods/create', [AdminExamPeriodController::class, 'create'])->name('exam-periods.create');
+        Route::post('exam-periods', [AdminExamPeriodController::class, 'store'])->name('exam-periods.store');
+    });
+    Route::middleware(['permission:view questions'])->group(function () {
+        Route::get('exam-periods', [AdminExamPeriodController::class, 'index'])->name('exam-periods.index');
+    });
+    Route::middleware(['permission:edit questions'])->group(function () {
+        Route::get('exam-periods/{examPeriod}/edit', [AdminExamPeriodController::class, 'edit'])->name('exam-periods.edit');
+        Route::put('exam-periods/{examPeriod}', [AdminExamPeriodController::class, 'update'])->name('exam-periods.update');
+    });
+    Route::middleware(['permission:delete questions'])->group(function () {
+        Route::delete('exam-periods/{examPeriod}', [AdminExamPeriodController::class, 'destroy'])->name('exam-periods.destroy');
     });
 
     // Users Management - requires user permissions

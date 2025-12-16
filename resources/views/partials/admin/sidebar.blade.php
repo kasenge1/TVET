@@ -50,6 +50,13 @@
         @endcan
 
         @can('view questions')
+        <a href="{{ route('admin.exam-periods.index') }}"
+           class="sidebar-item text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.exam-periods.*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-event me-2"></i> Exam Periods
+        </a>
+        @endcan
+
+        @can('view questions')
         <a href="{{ route('admin.questions.index') }}"
            class="sidebar-item text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.questions.*') ? 'active' : '' }}">
             <i class="bi bi-question-circle me-2"></i> Questions

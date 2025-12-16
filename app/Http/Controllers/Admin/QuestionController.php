@@ -67,6 +67,7 @@ class QuestionController extends Controller
 
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
+            'exam_period_id' => 'required|exists:exam_periods,id',
             'question_type' => 'required|in:text,video',
             'video_url' => 'required_if:question_type,video|nullable|url',
             'question_number' => [
@@ -193,6 +194,7 @@ class QuestionController extends Controller
     {
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
+            'exam_period_id' => 'required|exists:exam_periods,id',
             'question_type' => 'required|in:text,video',
             'video_url' => 'required_if:question_type,video|nullable|url',
             'parent_question_id' => 'nullable|exists:questions,id',

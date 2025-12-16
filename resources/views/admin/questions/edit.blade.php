@@ -35,6 +35,29 @@
                     @enderror
                 </div>
 
+                <!-- Exam Period Selection -->
+                <div class="mb-4">
+                    <label for="exam_period_id" class="form-label fw-medium">Exam Period <span class="text-danger">*</span></label>
+                    <select class="form-select @error('exam_period_id') is-invalid @enderror"
+                            id="exam_period_id"
+                            name="exam_period_id"
+                            required>
+                        <option value="">Select an exam period</option>
+                        @foreach(\App\Models\ExamPeriod::active()->ordered()->get() as $period)
+                            <option value="{{ $period->id }}" {{ old('exam_period_id', $question->exam_period_id) == $period->id ? 'selected' : '' }}>
+                                {{ $period->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('exam_period_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>When was this exam paper taken?
+                        <a href="{{ route('admin.exam-periods.create') }}" target="_blank">Add new exam period</a>
+                    </small>
+                </div>
+
                 <!-- Question Type Selection - Card Style -->
                 <div class="mb-4">
                     <label class="form-label fw-medium">Question Type <span class="text-danger">*</span></label>

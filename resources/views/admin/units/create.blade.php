@@ -65,33 +65,6 @@
                     height="250px"
                 />
 
-                <div class="mb-4">
-                    <label class="form-label fw-medium">Exam Period (Optional)</label>
-                    <p class="text-muted small mb-2">When was this exam paper administered?</p>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <select class="form-select" id="exam_month" name="exam_month">
-                                <option value="">Select Month</option>
-                                @foreach(\App\Models\Unit::MONTHS as $num => $name)
-                                    <option value="{{ $num }}" {{ old('exam_month') == $num ? 'selected' : '' }}>
-                                        {{ $name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <select class="form-select" id="exam_year" name="exam_year">
-                                <option value="">Select Year</option>
-                                @for($year = date('Y'); $year >= 2010; $year--)
-                                    <option value="{{ $year }}" {{ old('exam_year') == $year ? 'selected' : '' }}>
-                                        {{ $year }}
-                                    </option>
-                                @endfor
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="border-top pt-4">
                     <div class="d-flex flex-wrap gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -120,8 +93,8 @@
                     <strong>Title:</strong> Be clear and descriptive about the topic
                 </li>
                 <li>
-                    <i class="bi bi-lightbulb text-warning me-2"></i>
-                    <strong>Exam Period:</strong> Specify when the exam paper was administered
+                    <i class="bi bi-info-circle text-info me-2"></i>
+                    <strong>Note:</strong> Exam period is set when adding questions, not at unit level
                 </li>
             </ul>
         </x-card>

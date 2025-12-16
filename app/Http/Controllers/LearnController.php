@@ -12,6 +12,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionPackage;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\ExamPeriod;
 use App\Services\MpesaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -72,7 +73,7 @@ class LearnController extends Controller
     /**
      * Display a unit with its questions.
      */
-    public function unit(Unit $unit)
+    public function unit(Request $request, Unit $unit)
     {
         /** @var User $user */
         $user = Auth::user();
@@ -83,10 +84,43 @@ class LearnController extends Controller
             abort(403, 'You do not have access to this unit.');
         }
 
-        $questions = $unit->questions()
+        // Get available exam periods for this unit (from ExamPeriod model)
+        $examPeriodIds = Question::where('unit_id', $unit->id)
             ->mainQuestions()
-            ->orderBy('order')
-            ->paginate(10);
+            ->whereNotNull('exam_period_id')
+            ->distinct()
+            ->pluck('exam_period_id');
+
+        $examPeriods = ExamPeriod::whereIn('id', $examPeriodIds)
+            ->ordered()
+            ->get()
+            ->map(function ($period) {
+                return [
+                    'id' => $period->id,
+                    'label' => $period->name,
+                    'key' => $period->period_key,
+                ];
+            });
+
+        // Filter by exam period if specified
+        $selectedPeriod = $request->get('period');
+        $questionsQuery = $unit->questions()->mainQuestions();
+
+        if ($selectedPeriod) {
+            // Try to find by period key (e.g., "2025-07")
+            $examPeriod = ExamPeriod::where(function($q) use ($selectedPeriod) {
+                // Try to match by period_key format
+                if (preg_match('/^(\d{4})-(\d{2})$/', $selectedPeriod, $matches)) {
+                    $q->where('year', $matches[1])->where('month', (int) $matches[2]);
+                }
+            })->first();
+
+            if ($examPeriod) {
+                $questionsQuery->where('exam_period_id', $examPeriod->id);
+            }
+        }
+
+        $questions = $questionsQuery->with('examPeriod')->orderBy('order')->paginate(10);
 
         $savedIds = $user->bookmarks()->pluck('question_id')->toArray();
 
@@ -112,7 +146,7 @@ class LearnController extends Controller
 
         $course = $enrollment->course;
 
-        return view('learn.unit', compact('unit', 'questions', 'savedIds', 'viewedIds', 'unitProgress', 'lastViewed', 'course'));
+        return view('learn.unit', compact('unit', 'questions', 'savedIds', 'viewedIds', 'unitProgress', 'lastViewed', 'course', 'examPeriods', 'selectedPeriod'));
     }
 
     /**
