@@ -252,6 +252,15 @@
         <div class="sidebar-sticky" style="position: sticky; top: 20px;">
             <x-card title="Question Statistics">
                 <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Global #</span>
+                    <span class="badge bg-primary fs-6">#{{ $question->question_number }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Period #</span>
+                    <span class="badge bg-info fs-6">#{{ $question->period_question_number ?? 'N/A' }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
                     <span class="text-muted">Created</span>
                     <span>{{ $question->created_at->format('M d, Y') }}</span>
                 </div>
@@ -281,7 +290,14 @@
             <x-card title="Tips" class="mt-4">
                 <div class="mb-3">
                     <p class="small text-muted mb-1"><strong>Question Numbers:</strong></p>
-                    <p class="small text-muted mb-0">Use numbers for main questions (1, 2, 3) and letters for sub-questions (1a, 1b)</p>
+                    <p class="small text-muted mb-0">
+                        <strong>Global #</strong> is permanent (e.g., #1000).
+                        <strong>Period #</strong> is specific to the exam period (e.g., #1 in April 2025).
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <p class="small text-muted mb-1"><strong>Changing Exam Period:</strong></p>
+                    <p class="small text-muted mb-0">When you change the exam period, the Period # will be recalculated automatically.</p>
                 </div>
                 <div>
                     <p class="small text-muted mb-1"><strong>Math Formulas:</strong></p>

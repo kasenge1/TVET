@@ -131,8 +131,13 @@
                         <input type="hidden" name="question_number" id="question_number" value="{{ old('question_number') }}">
                     </div>
                     <small class="text-muted" id="question_number_help">
-                        <i class="bi bi-info-circle me-1"></i>Question number is automatically assigned based on the unit
+                        <i class="bi bi-info-circle me-1"></i>Select a unit and exam period to see question numbers
                     </small>
+                    <div class="mt-2 small text-muted">
+                        <i class="bi bi-lightbulb me-1"></i><strong>Note:</strong> Questions have two numbers:
+                        <strong>Global</strong> (permanent, e.g. #1000) and
+                        <strong>Period</strong> (within exam period, e.g. #1).
+                    </div>
                     @error('question_number')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
@@ -269,14 +274,20 @@
 
 @php
     $parentQuestionsJson = \App\Models\Question::whereNull('parent_question_id')
-        ->select(['id', 'unit_id', 'question_number', 'question_text'])
+        ->select(['id', 'unit_id', 'exam_period_id', 'question_number', 'period_question_number', 'question_text'])
         ->get();
 
-    // Get question counts for auto-numbering
-    $questionCountsJson = \App\Models\Question::whereNull('parent_question_id')
-        ->selectRaw('unit_id, MAX(CAST(question_number AS UNSIGNED)) as max_number')
-        ->groupBy('unit_id')
-        ->pluck('max_number', 'unit_id');
+    // Get GLOBAL max question number (across ALL questions) for auto-numbering
+    $globalMaxNumber = \App\Models\Question::whereNull('parent_question_id')
+        ->selectRaw('MAX(CAST(question_number AS UNSIGNED)) as max_number')
+        ->value('max_number') ?? 0;
+
+    // Get period question counts per unit + exam period combination for period numbering
+    $periodQuestionCounts = \App\Models\Question::whereNull('parent_question_id')
+        ->whereNotNull('exam_period_id')
+        ->selectRaw('CONCAT(unit_id, "-", exam_period_id) as period_key, COUNT(*) as count')
+        ->groupBy('unit_id', 'exam_period_id')
+        ->pluck('count', 'period_key');
 
     // Get sub-question counts per parent
     $subQuestionCountsJson = \App\Models\Question::whereNotNull('parent_question_id')
@@ -317,7 +328,8 @@
 <script>
 // Store parent questions data
 const parentQuestionsData = @json($parentQuestionsJson);
-const questionCounts = @json($questionCountsJson);
+const globalMaxNumber = @json($globalMaxNumber);
+const periodQuestionCounts = @json($periodQuestionCounts);
 const subQuestionCounts = @json($subQuestionCountsJson);
 
 // Question Type Selection
@@ -382,10 +394,16 @@ function previewImages(input, previewId) {
     }
 }
 
-// Generate next question number
-function getNextQuestionNumber(unitId) {
-    const maxNumber = questionCounts[unitId] || 0;
-    return parseInt(maxNumber) + 1;
+// Generate next GLOBAL question number (across all questions)
+function getNextGlobalQuestionNumber() {
+    return parseInt(globalMaxNumber) + 1;
+}
+
+// Generate next PERIOD question number (within unit + exam period)
+function getNextPeriodQuestionNumber(unitId, examPeriodId) {
+    const key = unitId + '-' + examPeriodId;
+    const count = periodQuestionCounts[key] || 0;
+    return parseInt(count) + 1;
 }
 
 // Generate next sub-question letter
@@ -490,17 +508,20 @@ document.getElementById('unit_id').addEventListener('change', function() {
     updateQuestionNumber();
 });
 
-// Update question number when parent changes
+// Update question number when parent or exam period changes
 document.getElementById('parent_question_id').addEventListener('change', updateQuestionNumber);
+document.getElementById('exam_period_id').addEventListener('change', updateQuestionNumber);
 
 function updateQuestionNumber() {
     const unitSelect = document.getElementById('unit_id');
     const parentSelect = document.getElementById('parent_question_id');
+    const examPeriodSelect = document.getElementById('exam_period_id');
     const displayInput = document.getElementById('question_number_display');
     const hiddenInput = document.getElementById('question_number');
     const help = document.getElementById('question_number_help');
 
     const unitId = unitSelect.value;
+    const examPeriodId = examPeriodSelect.value;
 
     if (!unitId) {
         displayInput.value = '';
@@ -520,12 +541,21 @@ function updateQuestionNumber() {
         hiddenInput.value = fullNumber;
         help.innerHTML = `<i class="bi bi-check-circle text-success me-1"></i>Sub-question of Q${parentNumber}`;
     } else {
-        // Main question - get next number
-        const nextNumber = getNextQuestionNumber(unitId);
+        // Main question - show both global number and period number
+        const nextGlobalNumber = getNextGlobalQuestionNumber();
+        const nextPeriodNumber = examPeriodId ? getNextPeriodQuestionNumber(unitId, examPeriodId) : '?';
 
-        displayInput.value = nextNumber;
-        hiddenInput.value = nextNumber;
-        help.innerHTML = `<i class="bi bi-check-circle text-success me-1"></i>Next available question number in this unit`;
+        displayInput.value = nextGlobalNumber;
+        hiddenInput.value = nextGlobalNumber;
+
+        // Show both numbers with explanation
+        let helpText = `<i class="bi bi-check-circle text-success me-1"></i>Global: #${nextGlobalNumber}`;
+        if (examPeriodId) {
+            helpText += ` | Period: #${nextPeriodNumber} <span class="text-muted">(in this exam period)</span>`;
+        } else {
+            helpText += ` <span class="text-muted">| Select an exam period to see period number</span>`;
+        }
+        help.innerHTML = helpText;
     }
 }
 

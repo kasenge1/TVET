@@ -130,7 +130,7 @@
                                             @if($isViewed)
                                                 <i class="bi bi-check-lg"></i>
                                             @else
-                                                {{ $questions->firstItem() + $index }}
+                                                {{ $question->period_question_number ?? ($questions->firstItem() + $index) }}
                                             @endif
                                         </div>
                                     </div>
@@ -213,7 +213,7 @@
                                         @if($isViewed)
                                             <i class="bi bi-check-lg"></i>
                                         @else
-                                            {{ $questions->firstItem() + $index }}
+                                            {{ $question->period_question_number ?? ($questions->firstItem() + $index) }}
                                         @endif
                                     </div>
                                 </div>

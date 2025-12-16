@@ -50,21 +50,38 @@ class Question extends Model
 
     /**
      * Generate a unique slug for the question.
-     * Uses question number (q1, q2, etc.) for clean, short URLs.
+     * Format: {exam_period_slug}-q{period_number} (e.g., "july-2024-q1")
+     * Uses period_question_number for exam-period-specific numbering.
      */
     protected static function generateSlug($question): string
     {
-        // Use question_number if available, otherwise use order or a counter
-        if (!empty($question->question_number)) {
-            return 'q' . $question->question_number;
+        $prefix = '';
+
+        // Include exam period in slug if available
+        if ($question->exam_period_id) {
+            $examPeriod = \App\Models\ExamPeriod::find($question->exam_period_id);
+            if ($examPeriod) {
+                $prefix = $examPeriod->slug . '-';
+            }
         }
 
-        // Fallback: find next available number in this unit
-        $maxOrder = static::where('unit_id', $question->unit_id)
-            ->where('id', '!=', $question->id ?? 0)
-            ->max('order') ?? 0;
+        // Use period_question_number for slug (exam-period-specific numbering)
+        if (!empty($question->period_question_number)) {
+            return $prefix . 'q' . $question->period_question_number;
+        }
 
-        return 'q' . ($maxOrder + 1);
+        // Fallback: find next available period number in this unit + exam period
+        $query = static::where('unit_id', $question->unit_id)
+            ->whereNull('parent_question_id')
+            ->where('id', '!=', $question->id ?? 0);
+
+        if ($question->exam_period_id) {
+            $query->where('exam_period_id', $question->exam_period_id);
+        }
+
+        $count = $query->count();
+
+        return $prefix . 'q' . ($count + 1);
     }
     /**
      * The attributes that are mass assignable.
@@ -79,6 +96,7 @@ class Question extends Model
         'question_type',
         'video_url',
         'question_number',
+        'period_question_number',
         'slug',
         'parent_question_id',
         'question_text',
@@ -104,6 +122,7 @@ class Question extends Model
         'view_count' => 'integer',
         'exam_month' => 'integer',
         'exam_year' => 'integer',
+        'period_question_number' => 'integer',
     ];
 
     /**

@@ -58,44 +58,24 @@ class QuestionController extends Controller
      */
     public function store(Request $request)
     {
-        // Auto-generate question number if not provided or generate fresh
-        $questionNumber = $this->generateQuestionNumber(
+        // Auto-generate global question number (permanent, sequential across all questions)
+        $globalQuestionNumber = $this->generateGlobalQuestionNumber($request->parent_question_id);
+        $request->merge(['question_number' => $globalQuestionNumber]);
+
+        // Auto-generate period-specific question number (1, 2, 3 within each exam period)
+        $periodQuestionNumber = $this->generatePeriodQuestionNumber(
             $request->unit_id,
-            $request->parent_question_id
+            $request->exam_period_id
         );
-        $request->merge(['question_number' => $questionNumber]);
+        $request->merge(['period_question_number' => $periodQuestionNumber]);
 
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'exam_period_id' => 'required|exists:exam_periods,id',
             'question_type' => 'required|in:text,video',
             'video_url' => 'required_if:question_type,video|nullable|url',
-            'question_number' => [
-                'required',
-                'string',
-                'max:50',
-                function ($attribute, $value, $fail) use ($request) {
-                    // Check uniqueness based on whether it's a sub-question or main question
-                    if ($request->parent_question_id) {
-                        // Sub-question: unique within the parent question
-                        $exists = Question::where('parent_question_id', $request->parent_question_id)
-                            ->where('question_number', $value)
-                            ->exists();
-                        if ($exists) {
-                            $fail('Sub-question "' . $value . '" already exists for this parent question.');
-                        }
-                    } else {
-                        // Main question: unique within the unit
-                        $exists = Question::where('unit_id', $request->unit_id)
-                            ->whereNull('parent_question_id')
-                            ->where('question_number', $value)
-                            ->exists();
-                        if ($exists) {
-                            $fail('Question number "' . $value . '" already exists in this unit.');
-                        }
-                    }
-                },
-            ],
+            'question_number' => 'required|string|max:50',
+            'period_question_number' => 'required|integer|min:1',
             'parent_question_id' => 'nullable|exists:questions,id',
             'question_text' => 'required_if:question_type,text|nullable|string',
             'question_images.*' => 'nullable|image|max:2048',
@@ -204,6 +184,25 @@ class QuestionController extends Controller
             'answer_images.*' => 'nullable|image|max:2048',
         ]);
 
+        // Check if exam period or unit changed - regenerate period question number
+        $examPeriodChanged = $question->exam_period_id != $request->exam_period_id;
+        $unitChanged = $question->unit_id != $request->unit_id;
+        $oldUnitId = $question->unit_id;
+        $oldExamPeriodId = $question->exam_period_id;
+
+        if ($examPeriodChanged || $unitChanged) {
+            // Generate new period question number for the new unit + exam period
+            // Note: question_number (global) stays the same - it's permanent
+            $validated['period_question_number'] = $this->generatePeriodQuestionNumber(
+                $request->unit_id,
+                $request->exam_period_id
+            );
+            // Also update slug since period number changed - include exam period slug
+            $examPeriod = \App\Models\ExamPeriod::find($request->exam_period_id);
+            $prefix = $examPeriod ? $examPeriod->slug . '-' : '';
+            $validated['slug'] = $prefix . 'q' . $validated['period_question_number'];
+        }
+
         // For video questions, set a default question_text
         if ($request->question_type === 'video') {
             $validated['question_text'] = $validated['question_text'] ?? 'Video Question';
@@ -256,6 +255,11 @@ class QuestionController extends Controller
         }
 
         $question->update($validated);
+
+        // Renumber questions in the OLD exam period to keep them sequential
+        if ($examPeriodChanged || $unitChanged) {
+            $this->renumberQuestionsInPeriod($oldUnitId, $oldExamPeriodId, $question->id);
+        }
 
         return redirect()->route('admin.questions.index')
             ->with('success', 'Question updated successfully!');
@@ -646,9 +650,45 @@ class QuestionController extends Controller
     }
 
     /**
-     * Generate the next question number automatically.
+     * Renumber all questions in a unit + exam period to keep period_question_number sequential (1, 2, 3...).
+     * Called after a question is moved out of an exam period.
+     * Note: This only updates period_question_number, NOT the global question_number.
      */
-    protected function generateQuestionNumber($unitId, $parentQuestionId = null): string
+    protected function renumberQuestionsInPeriod($unitId, $examPeriodId, $excludeQuestionId = null): void
+    {
+        if (!$unitId || !$examPeriodId) {
+            return;
+        }
+
+        // Get all main questions in this unit + exam period, ordered by their current order
+        $questions = Question::where('unit_id', $unitId)
+            ->where('exam_period_id', $examPeriodId)
+            ->whereNull('parent_question_id')
+            ->when($excludeQuestionId, fn($q) => $q->where('id', '!=', $excludeQuestionId))
+            ->orderBy('order')
+            ->get();
+
+        // Get the exam period for slug prefix
+        $examPeriod = \App\Models\ExamPeriod::find($examPeriodId);
+        $prefix = $examPeriod ? $examPeriod->slug . '-' : '';
+
+        // Renumber sequentially starting from 1
+        $number = 1;
+        foreach ($questions as $question) {
+            $question->update([
+                'period_question_number' => $number,
+                'slug' => $prefix . 'q' . $number,
+            ]);
+            $number++;
+        }
+    }
+
+    /**
+     * Generate the next global question number.
+     * This is a permanent sequential number across ALL questions (e.g., 1, 2, 3... 1000).
+     * This number never changes after a question is created.
+     */
+    protected function generateGlobalQuestionNumber($parentQuestionId = null): string
     {
         if ($parentQuestionId) {
             // Sub-question: get parent's number and append next letter
@@ -664,14 +704,33 @@ class QuestionController extends Controller
 
             return $parentQuestion->question_number . $letter;
         } else {
-            // Main question: get next number in unit
-            $maxNumber = Question::where('unit_id', $unitId)
-                ->whereNull('parent_question_id')
+            // Main question: get next global number based on MAX of all questions
+            $maxNumber = Question::whereNull('parent_question_id')
                 ->selectRaw('MAX(CAST(question_number AS UNSIGNED)) as max_num')
-                ->value('max_num');
+                ->value('max_num') ?? 0;
 
-            return (string) (($maxNumber ?? 0) + 1);
+            return (string) ($maxNumber + 1);
         }
+    }
+
+    /**
+     * Generate the next period-specific question number.
+     * This is sequential within each unit + exam period (e.g., 1, 2, 3 within each period).
+     * This number is recalculated when questions are transferred between periods.
+     */
+    protected function generatePeriodQuestionNumber($unitId, $examPeriodId): int
+    {
+        if (!$examPeriodId) {
+            return 1;
+        }
+
+        // Count existing main questions in this unit + exam period
+        $count = Question::where('unit_id', $unitId)
+            ->where('exam_period_id', $examPeriodId)
+            ->whereNull('parent_question_id')
+            ->count();
+
+        return $count + 1;
     }
 
     /**
