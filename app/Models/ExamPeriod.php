@@ -57,7 +57,13 @@ class ExamPeriod extends Model
         parent::boot();
 
         static::creating(function ($examPeriod) {
-            if (empty($examPeriod->slug)) {
+            // Auto-generate name if not provided (must be done FIRST)
+            if (empty($examPeriod->name) && $examPeriod->month && $examPeriod->year) {
+                $examPeriod->name = self::MONTHS[$examPeriod->month] . ' ' . $examPeriod->year;
+            }
+
+            // Generate slug from name (after name is set)
+            if (empty($examPeriod->slug) && !empty($examPeriod->name)) {
                 $examPeriod->slug = Str::slug($examPeriod->name);
             }
 
@@ -65,14 +71,15 @@ class ExamPeriod extends Model
             if (empty($examPeriod->order)) {
                 $examPeriod->order = static::max('order') + 1;
             }
-
-            // Auto-generate name if not provided
-            if (empty($examPeriod->name) && $examPeriod->month && $examPeriod->year) {
-                $examPeriod->name = self::MONTHS[$examPeriod->month] . ' ' . $examPeriod->year;
-            }
         });
 
         static::updating(function ($examPeriod) {
+            // Re-generate name if month/year changed and no custom name
+            if (($examPeriod->isDirty('month') || $examPeriod->isDirty('year'))) {
+                $examPeriod->name = self::MONTHS[$examPeriod->month] . ' ' . $examPeriod->year;
+            }
+
+            // Update slug when name changes
             if ($examPeriod->isDirty('name')) {
                 $examPeriod->slug = Str::slug($examPeriod->name);
             }

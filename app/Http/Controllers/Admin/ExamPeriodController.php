@@ -27,8 +27,9 @@ class ExamPeriodController extends Controller
     public function create()
     {
         $months = ExamPeriod::MONTHS;
-        $currentYear = date('Y');
-        $years = range($currentYear - 2, $currentYear + 2);
+        $currentYear = (int) date('Y');
+        // Only allow current year and 10 years back (no future years)
+        $years = range($currentYear, $currentYear - 10);
 
         return view('admin.exam-periods.create', compact('months', 'years', 'currentYear'));
     }
@@ -38,9 +39,11 @@ class ExamPeriodController extends Controller
      */
     public function store(Request $request)
     {
+        $currentYear = (int) date('Y');
+
         $validated = $request->validate([
             'month' => 'required|integer|between:1,12',
-            'year' => 'required|integer|min:2000|max:2100',
+            'year' => 'required|integer|min:2000|max:' . $currentYear,
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
@@ -69,8 +72,9 @@ class ExamPeriodController extends Controller
     public function edit(ExamPeriod $examPeriod)
     {
         $months = ExamPeriod::MONTHS;
-        $currentYear = date('Y');
-        $years = range($currentYear - 5, $currentYear + 5);
+        $currentYear = (int) date('Y');
+        // Only allow current year and 10 years back (no future years)
+        $years = range($currentYear, $currentYear - 10);
 
         return view('admin.exam-periods.edit', compact('examPeriod', 'months', 'years'));
     }
@@ -80,9 +84,11 @@ class ExamPeriodController extends Controller
      */
     public function update(Request $request, ExamPeriod $examPeriod)
     {
+        $currentYear = (int) date('Y');
+
         $validated = $request->validate([
             'month' => 'required|integer|between:1,12',
-            'year' => 'required|integer|min:2000|max:2100',
+            'year' => 'required|integer|min:2000|max:' . $currentYear,
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
