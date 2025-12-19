@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\WelcomeCredentialsMail;
+use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -213,8 +215,13 @@ class UserController extends Controller
                 ->with('error', 'You cannot edit other Super Admin accounts.');
         }
 
+        // Load enrollment with course
+        $user->load('enrollment.course');
+
         $roles = Role::orderBy('name')->get();
-        return view('admin.users.edit', compact('user', 'roles'));
+        $courses = Course::where('is_published', true)->orderBy('title')->get();
+
+        return view('admin.users.edit', compact('user', 'roles', 'courses'));
     }
 
     /**
@@ -239,6 +246,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'roles' => 'required|array|min:1',
             'roles.*' => 'exists:roles,name',
+            'course_id' => 'nullable|exists:courses,id',
             'subscription_tier' => 'required|in:free,premium',
             'subscription_expires_at' => 'nullable|date',
         ]);
@@ -249,11 +257,15 @@ class UserController extends Controller
             $validated['password'] = Hash::make($request->password);
         }
 
-        // Remove roles from validated data before updating user
+        // Remove roles and course_id from validated data before updating user
         $roles = $validated['roles'];
-        unset($validated['roles']);
+        $courseId = $validated['course_id'] ?? null;
+        unset($validated['roles'], $validated['course_id']);
 
         $user->update($validated);
+
+        // Handle course enrollment change
+        $this->updateUserEnrollment($user, $courseId);
 
         // Sync roles (only if not editing own account's roles)
         // Also prevent removing super-admin role from super-admin users
@@ -267,6 +279,38 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User updated successfully!');
+    }
+
+    /**
+     * Update user's course enrollment.
+     */
+    protected function updateUserEnrollment(User $user, ?int $courseId): void
+    {
+        $currentEnrollment = $user->enrollment;
+
+        if ($courseId) {
+            if ($currentEnrollment) {
+                // Update existing enrollment to new course
+                if ($currentEnrollment->course_id != $courseId) {
+                    $currentEnrollment->update([
+                        'course_id' => $courseId,
+                        'enrolled_at' => now(), // Reset enrollment date when changing course
+                    ]);
+                }
+            } else {
+                // Create new enrollment
+                Enrollment::create([
+                    'user_id' => $user->id,
+                    'course_id' => $courseId,
+                    'enrolled_at' => now(),
+                ]);
+            }
+        } else {
+            // Remove enrollment if no course selected
+            if ($currentEnrollment) {
+                $currentEnrollment->delete();
+            }
+        }
     }
 
     public function destroy(User $user)

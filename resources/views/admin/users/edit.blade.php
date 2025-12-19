@@ -130,6 +130,42 @@
                     @enderror
                 </div>
 
+                <!-- Course Enrollment Change -->
+                <div class="mb-4">
+                    <label for="course_id" class="form-label fw-medium">
+                        <i class="bi bi-book me-1"></i>Enrolled Course
+                    </label>
+                    @if($user->enrollment)
+                        <div class="alert alert-info py-2 mb-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Currently enrolled in: <strong>{{ $user->enrollment->course->title }}</strong>
+                            (since {{ $user->enrollment->enrolled_at->format('M d, Y') }})</small>
+                        </div>
+                    @else
+                        <div class="alert alert-warning py-2 mb-2">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <small>This user is not enrolled in any course</small>
+                        </div>
+                    @endif
+                    <select class="form-select @error('course_id') is-invalid @enderror"
+                            id="course_id"
+                            name="course_id">
+                        <option value="">-- No Course Enrollment --</option>
+                        @foreach($courses as $course)
+                            <option value="{{ $course->id }}"
+                                    {{ old('course_id', $user->enrollment?->course_id) == $course->id ? 'selected' : '' }}>
+                                {{ $course->title }} ({{ $course->code }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('course_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">
+                        <i class="bi bi-exclamation-circle me-1"></i>Change this if the student registered for the wrong course
+                    </small>
+                </div>
+
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <label for="subscription_tier" class="form-label fw-medium">Subscription Tier <span class="text-danger">*</span></label>
