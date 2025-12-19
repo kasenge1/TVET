@@ -195,22 +195,37 @@
                     <div id="question_preview" class="row g-2 mt-2"></div>
                 </div>
 
-                <div class="border-top pt-4 mb-4">
+                <div class="border-top pt-4 mb-4" id="answer_section">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Answer <span class="text-danger">*</span></h5>
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateAnswer()">
+                        <div>
+                            <h5 class="mb-0">Answer <span class="text-danger answer-required-indicator">*</span></h5>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateAnswer()" id="generate_answer_btn">
                             <i class="bi bi-stars me-1"></i>Generate with AI
                         </button>
                     </div>
 
-                    <x-quill-editor
-                        name="answer_text"
-                        id="answer_editor"
-                        label="Answer Text"
-                        placeholder="Enter the answer text here..."
-                        height="300px"
-                        required
-                    />
+                    <!-- Option to mark as parent question (no answer needed) -->
+                    <div class="alert alert-light border mb-3" id="parent_question_option">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="has_sub_questions" name="has_sub_questions" value="1" {{ old('has_sub_questions') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="has_sub_questions">
+                                <strong>This question will have sub-questions (a, b, c...)</strong>
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>Check this if the answer will be in the sub-questions, not in this main question.
+                        </small>
+                    </div>
+
+                    <div id="answer_fields">
+                        <x-quill-editor
+                            name="answer_text"
+                            id="answer_editor"
+                            label="Answer Text"
+                            placeholder="Enter the answer text here..."
+                            height="300px"
+                        />
 
 
                     <div class="mb-4">
@@ -228,6 +243,7 @@
                         @enderror
                         <div id="answer_preview" class="row g-2 mt-2"></div>
                     </div>
+                    </div><!-- End answer_fields -->
                 </div>
                 </div><!-- End text_section -->
 
@@ -783,6 +799,51 @@ document.addEventListener('DOMContentLoaded', function() {
         if (questionTextarea) questionTextarea.removeAttribute('required');
         if (answerTextarea) answerTextarea.removeAttribute('required');
         if (videoUrlInput) videoUrlInput.setAttribute('required', 'required');
+    }
+
+    // Initialize has_sub_questions checkbox state
+    toggleAnswerRequired();
+});
+
+// Handle "has sub-questions" checkbox
+document.getElementById('has_sub_questions').addEventListener('change', toggleAnswerRequired);
+
+function toggleAnswerRequired() {
+    const hasSubQuestions = document.getElementById('has_sub_questions').checked;
+    const answerFields = document.getElementById('answer_fields');
+    const answerRequiredIndicator = document.querySelector('.answer-required-indicator');
+    const answerTextarea = document.getElementById('textarea_answer_text');
+    const generateAnswerBtn = document.getElementById('generate_answer_btn');
+    const parentQuestionOption = document.getElementById('parent_question_option');
+
+    if (hasSubQuestions) {
+        // Hide answer fields - answers will be in sub-questions
+        answerFields.style.display = 'none';
+        answerRequiredIndicator.style.display = 'none';
+        generateAnswerBtn.style.display = 'none';
+        if (answerTextarea) answerTextarea.removeAttribute('required');
+    } else {
+        // Show answer fields - this question needs an answer
+        answerFields.style.display = 'block';
+        answerRequiredIndicator.style.display = 'inline';
+        generateAnswerBtn.style.display = 'inline-block';
+        // Don't make required - let backend handle validation based on context
+    }
+}
+
+// Hide the "has sub-questions" option when creating a sub-question
+document.getElementById('parent_question_id').addEventListener('change', function() {
+    const parentQuestionOption = document.getElementById('parent_question_option');
+    const hasSubQuestionsCheckbox = document.getElementById('has_sub_questions');
+
+    if (this.value) {
+        // This is a sub-question - hide the option and uncheck
+        parentQuestionOption.style.display = 'none';
+        hasSubQuestionsCheckbox.checked = false;
+        toggleAnswerRequired();
+    } else {
+        // This is a main question - show the option
+        parentQuestionOption.style.display = 'block';
     }
 });
 </script>

@@ -69,6 +69,14 @@ class QuestionController extends Controller
         );
         $request->merge(['period_question_number' => $periodQuestionNumber]);
 
+        // Determine if answer is required:
+        // - Not required for video questions
+        // - Not required if question has sub-questions (answer will be in sub-questions)
+        // - Required for text questions without sub-questions
+        $hasSubQuestions = $request->boolean('has_sub_questions');
+        $isVideoQuestion = $request->question_type === 'video';
+        $answerRequired = !$isVideoQuestion && !$hasSubQuestions;
+
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'exam_period_id' => 'required|exists:exam_periods,id',
@@ -77,15 +85,24 @@ class QuestionController extends Controller
             'question_number' => 'required|string|max:50',
             'period_question_number' => 'required|integer|min:1',
             'parent_question_id' => 'nullable|exists:questions,id',
+            'has_sub_questions' => 'nullable|boolean',
             'question_text' => 'required_if:question_type,text|nullable|string',
             'question_images.*' => 'nullable|image|max:2048',
-            'answer_text' => 'required_if:question_type,text|nullable|string',
+            'answer_text' => $answerRequired ? 'required|string' : 'nullable|string',
             'answer_images.*' => 'nullable|image|max:2048',
         ]);
+
+        // Remove has_sub_questions from validated data (not a database field)
+        unset($validated['has_sub_questions']);
 
         // For video questions, set a default question_text
         if ($request->question_type === 'video') {
             $validated['question_text'] = $validated['question_text'] ?? 'Video Question';
+        }
+
+        // For questions with sub-questions, set a placeholder answer
+        if ($hasSubQuestions && empty($validated['answer_text'])) {
+            $validated['answer_text'] = '<p><em>See sub-questions for answers.</em></p>';
         }
 
         // Sanitize HTML content to prevent XSS attacks
