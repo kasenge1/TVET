@@ -50,7 +50,8 @@ class Question extends Model
 
     /**
      * Generate a unique slug for the question.
-     * Format: {exam_period_slug}-q{period_number} (e.g., "july-2024-q1")
+     * Format for main questions: {exam_period_slug}-q{period_number} (e.g., "july-2024-q1")
+     * Format for sub-questions: {exam_period_slug}-q{period_number}{letter} (e.g., "july-2024-q1a")
      * Uses period_question_number for exam-period-specific numbering.
      */
     protected static function generateSlug($question): string
@@ -65,7 +66,29 @@ class Question extends Model
             }
         }
 
-        // Use period_question_number for slug (exam-period-specific numbering)
+        // Handle sub-questions differently
+        if ($question->parent_question_id) {
+            // Get parent question to use its period number
+            $parent = static::find($question->parent_question_id);
+
+            if ($parent && $parent->period_question_number) {
+                $baseSlug = $prefix . 'q' . $parent->period_question_number;
+
+                // Find which sub-question this is (a, b, c, etc.)
+                $subQuestionPosition = static::where('parent_question_id', $question->parent_question_id)
+                    ->where('id', '<', $question->id ?? PHP_INT_MAX)
+                    ->count() + 1;
+
+                $letter = chr(96 + $subQuestionPosition); // 97 = 'a', 98 = 'b', etc.
+
+                return $baseSlug . $letter;
+            }
+
+            // Fallback for sub-questions without proper parent
+            return $prefix . 'q-sub-' . ($question->id ?? uniqid());
+        }
+
+        // Main question: Use period_question_number for slug (exam-period-specific numbering)
         if (!empty($question->period_question_number)) {
             return $prefix . 'q' . $question->period_question_number;
         }
