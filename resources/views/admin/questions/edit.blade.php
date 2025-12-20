@@ -171,23 +171,57 @@
                     @enderror
                 </div>
 
-                <div class="border-top pt-4 mb-4" id="answer">
+                <div class="border-top pt-4 mb-4" id="answer_section">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Answer <span class="text-danger">*</span></h5>
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateAnswer()">
+                        <div>
+                            <h5 class="mb-0">Answer <span class="text-danger answer-required-indicator" style="{{ $question->has_sub_questions ? 'display:none;' : '' }}">*</span></h5>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateAnswer()" id="generate_answer_btn" style="{{ $question->has_sub_questions ? 'display:none;' : '' }}">
                             <i class="bi bi-stars me-1"></i>Generate with AI
                         </button>
                     </div>
 
-                    <x-quill-editor
-                        name="answer_text"
-                        id="answer_editor"
-                        label="Answer Text"
-                        placeholder="Enter the answer text here..."
-                        height="300px"
-                        :value="old('answer_text', $question->answer_text)"
-                        required
-                    />
+                    <!-- Option to mark as parent question (no answer needed) - Only for main questions without parent -->
+                    @if(!$question->parent_question_id)
+                        <div class="alert alert-light border mb-3" id="parent_question_option">
+                            @php
+                                $hasExistingSubQuestions = $question->subQuestions()->count() > 0;
+                            @endphp
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       id="has_sub_questions"
+                                       name="has_sub_questions"
+                                       value="1"
+                                       {{ old('has_sub_questions', $question->has_sub_questions) ? 'checked' : '' }}
+                                       {{ $hasExistingSubQuestions ? 'disabled' : '' }}>
+                                <label class="form-check-label" for="has_sub_questions">
+                                    <strong>This question has sub-questions (a, b, c...)</strong>
+                                </label>
+                            </div>
+                            @if($hasExistingSubQuestions)
+                                <small class="text-warning d-block mt-1">
+                                    <i class="bi bi-lock me-1"></i>Cannot change - this question already has {{ $question->subQuestions()->count() }} sub-question(s).
+                                </small>
+                                <!-- Hidden input to ensure value is submitted when checkbox is disabled -->
+                                <input type="hidden" name="has_sub_questions" value="1">
+                            @else
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>Check this if the answer will be in the sub-questions, not in this main question.
+                                </small>
+                            @endif
+                        </div>
+                    @endif
+
+                    <div id="answer_fields" style="{{ $question->has_sub_questions ? 'display:none;' : '' }}">
+                        <x-quill-editor
+                            name="answer_text"
+                            id="answer_editor"
+                            label="Answer Text"
+                            placeholder="Enter the answer text here..."
+                            height="300px"
+                            :value="old('answer_text', $question->answer_text)"
+                        />
 
                     @if($question->answer_images)
                         @php
@@ -229,6 +263,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    </div><!-- End answer_fields -->
                 </div>
                 </div><!-- End text_section -->
 
@@ -493,5 +528,33 @@ document.addEventListener('DOMContentLoaded', function() {
         if (videoUrlInput) videoUrlInput.setAttribute('required', 'required');
     }
 });
+
+// Handle "has sub-questions" checkbox toggle
+const hasSubQuestionsCheckbox = document.getElementById('has_sub_questions');
+if (hasSubQuestionsCheckbox && !hasSubQuestionsCheckbox.disabled) {
+    hasSubQuestionsCheckbox.addEventListener('change', toggleAnswerRequired);
+}
+
+function toggleAnswerRequired() {
+    const hasSubQuestionsCheckbox = document.getElementById('has_sub_questions');
+    if (!hasSubQuestionsCheckbox) return;
+
+    const hasSubQuestions = hasSubQuestionsCheckbox.checked;
+    const answerFields = document.getElementById('answer_fields');
+    const answerRequiredIndicator = document.querySelector('.answer-required-indicator');
+    const generateAnswerBtn = document.getElementById('generate_answer_btn');
+
+    if (hasSubQuestions) {
+        // Hide answer fields - answers will be in sub-questions
+        if (answerFields) answerFields.style.display = 'none';
+        if (answerRequiredIndicator) answerRequiredIndicator.style.display = 'none';
+        if (generateAnswerBtn) generateAnswerBtn.style.display = 'none';
+    } else {
+        // Show answer fields - this question needs an answer
+        if (answerFields) answerFields.style.display = 'block';
+        if (answerRequiredIndicator) answerRequiredIndicator.style.display = 'inline';
+        if (generateAnswerBtn) generateAnswerBtn.style.display = 'inline-block';
+    }
+}
 </script>
 @endpush

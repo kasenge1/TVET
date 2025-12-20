@@ -92,8 +92,8 @@ class QuestionController extends Controller
             'answer_images.*' => 'nullable|image|max:2048',
         ]);
 
-        // Remove has_sub_questions from validated data (not a database field)
-        unset($validated['has_sub_questions']);
+        // Set has_sub_questions boolean value
+        $validated['has_sub_questions'] = $hasSubQuestions;
 
         // For video questions, set a default question_text
         if ($request->question_type === 'video') {
@@ -189,17 +189,33 @@ class QuestionController extends Controller
      */
     public function update(Request $request, Question $question)
     {
+        // Determine if answer is required
+        // If question has existing sub-questions, has_sub_questions must stay true
+        $hasExistingSubQuestions = $question->subQuestions()->count() > 0;
+        $hasSubQuestions = $hasExistingSubQuestions || $request->boolean('has_sub_questions');
+        $isVideoQuestion = $request->question_type === 'video';
+        $answerRequired = !$isVideoQuestion && !$hasSubQuestions;
+
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'exam_period_id' => 'required|exists:exam_periods,id',
             'question_type' => 'required|in:text,video',
             'video_url' => 'required_if:question_type,video|nullable|url',
             'parent_question_id' => 'nullable|exists:questions,id',
+            'has_sub_questions' => 'nullable|boolean',
             'question_text' => 'required_if:question_type,text|nullable|string',
             'question_images.*' => 'nullable|image|max:2048',
-            'answer_text' => 'required_if:question_type,text|nullable|string',
+            'answer_text' => $answerRequired ? 'required|string' : 'nullable|string',
             'answer_images.*' => 'nullable|image|max:2048',
         ]);
+
+        // Set has_sub_questions - cannot be turned off if question has existing sub-questions
+        $validated['has_sub_questions'] = $hasSubQuestions;
+
+        // For questions with sub-questions, set a placeholder answer if empty
+        if ($hasSubQuestions && empty($validated['answer_text'])) {
+            $validated['answer_text'] = '<p><em>See sub-questions for answers.</em></p>';
+        }
 
         // Check if exam period or unit changed - regenerate period question number
         $examPeriodChanged = $question->exam_period_id != $request->exam_period_id;

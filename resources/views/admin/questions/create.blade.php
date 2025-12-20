@@ -292,7 +292,9 @@
 @endsection
 
 @php
+    // Only questions marked as "has_sub_questions" can be parent questions
     $parentQuestionsJson = \App\Models\Question::whereNull('parent_question_id')
+        ->where('has_sub_questions', true)
         ->select(['id', 'unit_id', 'exam_period_id', 'question_number', 'period_question_number', 'question_text'])
         ->get();
 
