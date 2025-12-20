@@ -60,7 +60,7 @@ class Question extends Model
         // Include exam period in slug if available
         if ($question->exam_period_id) {
             $examPeriod = \App\Models\ExamPeriod::find($question->exam_period_id);
-            if ($examPeriod) {
+            if ($examPeriod && !empty($examPeriod->slug)) { // Check if slug is not empty
                 $prefix = $examPeriod->slug . '-';
             }
         }

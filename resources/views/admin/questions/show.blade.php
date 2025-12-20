@@ -160,12 +160,18 @@
                                     </div>
                                 </div>
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('admin.questions.show', $subQuestion) }}" class="btn btn-outline-primary" title="View">
+                                    <a href="{{ route('admin.questions.show', $subQuestion) }}" class="btn btn-outline-primary" title="View Details">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.questions.edit', $subQuestion) }}" class="btn btn-outline-secondary" title="Edit">
+                                    <a href="{{ route('admin.questions.edit', $subQuestion) }}" class="btn btn-outline-secondary" title="Edit Sub-question">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                    <button type="button"
+                                            class="btn btn-outline-danger"
+                                            onclick="deleteSubQuestion({{ $subQuestion->id }}, '{{ $subLetter }}')"
+                                            title="Delete Sub-question">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </div>
 
@@ -341,5 +347,35 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+// Delete sub-question function
+function deleteSubQuestion(subQuestionId, subQuestionLetter) {
+    if (!confirm(`Are you sure you want to delete sub-question "${subQuestionLetter}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+
+    // Create form and submit
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/questions/${subQuestionId}`;
+    form.style.display = 'none';
+
+    // Add CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = '{{ csrf_token() }}';
+    form.appendChild(csrfInput);
+
+    // Add DELETE method
+    const methodInput = document.createElement('input');
+    methodInput.type = 'hidden';
+    methodInput.name = '_method';
+    methodInput.value = 'DELETE';
+    form.appendChild(methodInput);
+
+    document.body.appendChild(form);
+    form.submit();
+}
 </script>
 @endpush

@@ -299,6 +299,10 @@ class QuestionController extends Controller
      */
     public function destroy(Question $question)
     {
+        // Check if this is a sub-question
+        $isSubQuestion = !is_null($question->parent_question_id);
+        $parentQuestionId = $question->parent_question_id;
+
         // Delete question images
         if ($question->question_images) {
             foreach ($question->question_images as $image) {
@@ -313,8 +317,33 @@ class QuestionController extends Controller
             }
         }
 
+        // If this is a parent question, also delete all sub-questions
+        if ($question->has_sub_questions) {
+            foreach ($question->subQuestions as $subQuestion) {
+                // Delete sub-question images
+                if ($subQuestion->question_images) {
+                    foreach ($subQuestion->question_images as $image) {
+                        Storage::disk('public')->delete($image);
+                    }
+                }
+                if ($subQuestion->answer_images) {
+                    foreach ($subQuestion->answer_images as $image) {
+                        Storage::disk('public')->delete($image);
+                    }
+                }
+                $subQuestion->delete();
+            }
+        }
+
         $question->delete();
 
+        // If this was a sub-question, redirect back to parent question
+        if ($isSubQuestion && $parentQuestionId) {
+            return redirect()->route('admin.questions.show', $parentQuestionId)
+                ->with('success', 'Sub-question deleted successfully!');
+        }
+
+        // Otherwise redirect to questions index
         return redirect()->route('admin.questions.index')
             ->with('success', 'Question deleted successfully!');
     }
@@ -735,10 +764,9 @@ class QuestionController extends Controller
         } else {
             // Main question: get next global number based on MAX of all questions
             $maxNumber = Question::whereNull('parent_question_id')
-                ->selectRaw('MAX(CAST(question_number AS UNSIGNED)) as max_num')
-                ->value('max_num') ?? 0;
+                ->max(\DB::raw('CAST(question_number AS UNSIGNED)'));
 
-            return (string) ($maxNumber + 1);
+            return (string) (($maxNumber ?? 0) + 1);
         }
     }
 
@@ -753,13 +781,13 @@ class QuestionController extends Controller
             return 1;
         }
 
-        // Count existing main questions in this unit + exam period
-        $count = Question::where('unit_id', $unitId)
+        // Find the highest existing period_question_number for this unit + exam period
+        $maxNumber = Question::where('unit_id', $unitId)
             ->where('exam_period_id', $examPeriodId)
             ->whereNull('parent_question_id')
-            ->count();
+            ->max('period_question_number');
 
-        return $count + 1;
+        return ($maxNumber ?? 0) + 1;
     }
 
     /**
