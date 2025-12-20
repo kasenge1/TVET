@@ -75,9 +75,12 @@ class Question extends Model
                 $baseSlug = $prefix . 'q' . $parent->period_question_number;
 
                 // Find which sub-question this is (a, b, c, etc.)
-                $subQuestionPosition = static::where('parent_question_id', $question->parent_question_id)
-                    ->where('id', '<', $question->id ?? PHP_INT_MAX)
-                    ->count() + 1;
+                // Use the count of existing sub-questions for this parent
+                $existingCount = static::where('parent_question_id', $question->parent_question_id)
+                    ->count();
+
+                // Position is existingCount + 1 (for the one being created)
+                $subQuestionPosition = $existingCount + 1;
 
                 $letter = chr(96 + $subQuestionPosition); // 97 = 'a', 98 = 'b', etc.
 
@@ -85,7 +88,7 @@ class Question extends Model
             }
 
             // Fallback for sub-questions without proper parent
-            return $prefix . 'q-sub-' . ($question->id ?? uniqid());
+            return $prefix . 'q-sub-' . uniqid();
         }
 
         // Main question: Use period_question_number for slug (exam-period-specific numbering)

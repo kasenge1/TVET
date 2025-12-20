@@ -31,12 +31,14 @@ return new class extends Migration
             // Generate new slug
             $baseSlug = $prefix . 'q' . $parent->period_question_number;
 
-            // Find position among siblings (ordered by id)
-            $position = Question::where('parent_question_id', $parent->id)
-                ->where('id', '<=', $sub->id)
+            // Find position among siblings (ordered by order field, then by id)
+            $siblings = Question::where('parent_question_id', $parent->id)
+                ->orderBy('order')
                 ->orderBy('id')
                 ->pluck('id')
-                ->search($sub->id) + 1;
+                ->toArray();
+
+            $position = array_search($sub->id, $siblings) + 1;
 
             $letter = chr(96 + $position); // 97 = 'a', 98 = 'b', etc.
             $newSlug = $baseSlug . $letter;
