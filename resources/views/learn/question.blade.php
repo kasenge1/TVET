@@ -79,8 +79,13 @@
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <span class="badge bg-primary me-2">{{ $unit->title }}</span>
-                            @if($question->question_number)
+                            @if($question->period_question_number)
+                                <span class="badge bg-secondary">Q{{ $question->period_question_number }}</span>
+                            @elseif($question->question_number)
                                 <span class="badge bg-secondary">Q{{ $question->question_number }}</span>
+                            @endif
+                            @if($question->has_sub_questions && $question->subQuestions->count() > 0)
+                                <span class="badge bg-info">{{ $question->subQuestions->count() }} parts</span>
                             @endif
                         </div>
                         <button class="btn btn-sm bookmark-btn {{ $isSaved ? 'btn-warning' : 'btn-outline-warning' }}"
@@ -139,68 +144,159 @@
             <!-- Ad Banner -->
             <x-google-ad slot="content" class="mb-4" />
 
-            <!-- Answer Card -->
-            @if($question->isVideoQuestion())
-                <!-- Video questions: Answer is included in the video -->
-                <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #28a745 !important;">
+            <!-- Sub-Questions Section (if this is a parent question with sub-questions) -->
+            @if($question->subQuestions && $question->subQuestions->count() > 0)
+                <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
-                        <h6 class="text-uppercase text-success fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                            <i class="bi bi-check-circle-fill me-1"></i>Answer
+                        <h6 class="text-uppercase text-primary fw-bold mb-4" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                            <i class="bi bi-list-ol me-1"></i>Sub-Questions & Answers
                         </h6>
-                        <div class="text-center py-3">
-                            <div class="mb-3">
-                                <i class="bi bi-play-circle text-success" style="font-size: 3rem;"></i>
+
+                        @foreach($question->subQuestions as $index => $subQuestion)
+                            @php
+                                $subLetter = chr(97 + $index); // a, b, c...
+                                $parentNum = $question->period_question_number ?? ($currentIndex + 1);
+                            @endphp
+                            <div class="sub-question-item mb-4 {{ !$loop->last ? 'pb-4 border-bottom' : '' }}">
+                                <!-- Sub-question -->
+                                <div class="d-flex mb-3">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                                            {{ $subLetter }}
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="question-content" style="font-size: 1rem; line-height: 1.7;">
+                                            {!! $subQuestion->question_text !!}
+                                        </div>
+
+                                        @if($subQuestion->question_images && count($subQuestion->question_images) > 0)
+                                            <div class="question-images mt-3">
+                                                <div class="row g-2">
+                                                    @foreach($subQuestion->question_images as $image)
+                                                        <div class="col-md-6">
+                                                            <a href="{{ asset('storage/' . $image) }}" target="_blank">
+                                                                <img src="{{ asset('storage/' . $image) }}"
+                                                                     alt="Question Image"
+                                                                     class="img-fluid rounded border"
+                                                                     style="max-height: 200px; cursor: zoom-in;">
+                                                            </a>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Sub-question Answer -->
+                                <div class="ms-5 ps-2 border-start border-success border-3 bg-light rounded-end p-3">
+                                    <small class="text-uppercase text-success fw-bold d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Answer ({{ $subLetter }})
+                                    </small>
+                                    @if($subQuestion->answer_text)
+                                        <div class="answer-content" style="font-size: 0.95rem; line-height: 1.6;">
+                                            {!! $subQuestion->answer_text !!}
+                                        </div>
+                                    @else
+                                        <div class="text-muted small">
+                                            <i class="bi bi-hourglass-split me-1"></i>Answer coming soon...
+                                        </div>
+                                    @endif
+
+                                    @if($subQuestion->answer_images && count($subQuestion->answer_images) > 0)
+                                        <div class="answer-images mt-3">
+                                            <div class="row g-2">
+                                                @foreach($subQuestion->answer_images as $image)
+                                                    <div class="col-md-6">
+                                                        <a href="{{ asset('storage/' . $image) }}" target="_blank">
+                                                            <img src="{{ asset('storage/' . $image) }}"
+                                                                 alt="Answer Image"
+                                                                 class="img-fluid rounded border"
+                                                                 style="max-height: 200px; cursor: zoom-in;">
+                                                        </a>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if($subQuestion->ai_generated)
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                <i class="bi bi-robot me-1"></i>AI generated
+                                            </small>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                            <p class="mb-2 fw-medium">The answer is included in the video above</p>
-                            <p class="text-muted small mb-0">Watch the complete video to see the full explanation and solution.</p>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             @else
-                <!-- Text questions: Show answer text -->
-                <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #28a745 !important;">
-                    <div class="card-body p-4">
-                        <h6 class="text-uppercase text-success fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                            <i class="bi bi-check-circle-fill me-1"></i>Answer
-                        </h6>
-
-                        @if($question->answer_text)
-                            <div class="answer-content" style="font-size: 1rem; line-height: 1.7;">
-                                {!! $question->answer_text !!}
-                            </div>
-                        @else
-                            <div class="text-muted text-center py-4">
-                                <i class="bi bi-hourglass-split display-4 mb-3"></i>
-                                <p class="mb-0">Answer coming soon...</p>
-                            </div>
-                        @endif
-
-                        @if($question->answer_images && count($question->answer_images) > 0)
-                            <div class="answer-images mt-4">
-                                <div class="row g-2">
-                                    @foreach($question->answer_images as $image)
-                                        <div class="col-md-6">
-                                            <a href="{{ asset('storage/' . $image) }}" target="_blank">
-                                                <img src="{{ asset('storage/' . $image) }}"
-                                                     alt="Answer Image"
-                                                     class="img-fluid rounded border"
-                                                     style="max-height: 300px; cursor: zoom-in;">
-                                            </a>
-                                        </div>
-                                    @endforeach
+                <!-- Answer Card (for questions without sub-questions) -->
+                @if($question->isVideoQuestion())
+                    <!-- Video questions: Answer is included in the video -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #28a745 !important;">
+                        <div class="card-body p-4">
+                            <h6 class="text-uppercase text-success fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <i class="bi bi-check-circle-fill me-1"></i>Answer
+                            </h6>
+                            <div class="text-center py-3">
+                                <div class="mb-3">
+                                    <i class="bi bi-play-circle text-success" style="font-size: 3rem;"></i>
                                 </div>
+                                <p class="mb-2 fw-medium">The answer is included in the video above</p>
+                                <p class="text-muted small mb-0">Watch the complete video to see the full explanation and solution.</p>
                             </div>
-                        @endif
-
-                        @if($question->ai_generated)
-                            <div class="mt-4 pt-3 border-top">
-                                <small class="text-muted">
-                                    <i class="bi bi-robot me-1"></i>This answer was generated with AI assistance
-                                </small>
-                            </div>
-                        @endif
+                        </div>
                     </div>
-                </div>
+                @else
+                    <!-- Text questions: Show answer text -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #28a745 !important;">
+                        <div class="card-body p-4">
+                            <h6 class="text-uppercase text-success fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <i class="bi bi-check-circle-fill me-1"></i>Answer
+                            </h6>
+
+                            @if($question->answer_text)
+                                <div class="answer-content" style="font-size: 1rem; line-height: 1.7;">
+                                    {!! $question->answer_text !!}
+                                </div>
+                            @else
+                                <div class="text-muted text-center py-4">
+                                    <i class="bi bi-hourglass-split display-4 mb-3"></i>
+                                    <p class="mb-0">Answer coming soon...</p>
+                                </div>
+                            @endif
+
+                            @if($question->answer_images && count($question->answer_images) > 0)
+                                <div class="answer-images mt-4">
+                                    <div class="row g-2">
+                                        @foreach($question->answer_images as $image)
+                                            <div class="col-md-6">
+                                                <a href="{{ asset('storage/' . $image) }}" target="_blank">
+                                                    <img src="{{ asset('storage/' . $image) }}"
+                                                         alt="Answer Image"
+                                                         class="img-fluid rounded border"
+                                                         style="max-height: 300px; cursor: zoom-in;">
+                                                </a>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if($question->ai_generated)
+                                <div class="mt-4 pt-3 border-top">
+                                    <small class="text-muted">
+                                        <i class="bi bi-robot me-1"></i>This answer was generated with AI assistance
+                                    </small>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             @endif
 
             <!-- Ad Banner -->

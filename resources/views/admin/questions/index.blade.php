@@ -126,8 +126,14 @@
                     $query->where('question_text', 'like', '%' . request('search') . '%');
                 }
 
+                // Get total count for inverted numbering
+                $totalCount = (clone $query)->count();
                 $questions = $query->latest()->paginate(20);
-                $startNumber = ($questions->currentPage() - 1) * $questions->perPage() + 1;
+
+                // Calculate starting number for this page (inverted: newest shows highest number)
+                // Page 1 shows items: total, total-1, total-2, ...
+                // Page 2 shows items: total-20, total-21, ...
+                $pageStartNumber = $totalCount - (($questions->currentPage() - 1) * $questions->perPage());
             @endphp
 
             @forelse($questions as $index => $question)
@@ -138,12 +144,15 @@
                 </td>
                 <td>
                     <div class="d-flex align-items-center gap-1">
-                        <span class="badge bg-secondary">{{ $startNumber + $index }}</span>
+                        <span class="badge bg-secondary">{{ $pageStartNumber - $index }}</span>
                         @if($question->isVideoQuestion())
                             <span class="badge bg-danger" title="Video Question"><i class="bi bi-play-circle"></i></span>
                         @endif
                         @if($question->ai_generated)
                             <span class="badge bg-info" title="AI Generated"><i class="bi bi-robot"></i></span>
+                        @endif
+                        @if($question->has_sub_questions)
+                            <span class="badge bg-warning text-dark" title="Has sub-questions"><i class="bi bi-diagram-3"></i></span>
                         @endif
                     </div>
                 </td>

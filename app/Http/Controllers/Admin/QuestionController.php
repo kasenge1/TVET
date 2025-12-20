@@ -100,10 +100,8 @@ class QuestionController extends Controller
             $validated['question_text'] = $validated['question_text'] ?? 'Video Question';
         }
 
-        // For questions with sub-questions, set a placeholder answer
-        if ($hasSubQuestions && empty($validated['answer_text'])) {
-            $validated['answer_text'] = '<p><em>See sub-questions for answers.</em></p>';
-        }
+        // For questions with sub-questions, answer is optional - don't set placeholder
+        // The answer will come from the sub-questions
 
         // Sanitize HTML content to prevent XSS attacks
         if (!empty($validated['question_text'])) {
@@ -212,10 +210,8 @@ class QuestionController extends Controller
         // Set has_sub_questions - cannot be turned off if question has existing sub-questions
         $validated['has_sub_questions'] = $hasSubQuestions;
 
-        // For questions with sub-questions, set a placeholder answer if empty
-        if ($hasSubQuestions && empty($validated['answer_text'])) {
-            $validated['answer_text'] = '<p><em>See sub-questions for answers.</em></p>';
-        }
+        // For questions with sub-questions, answer is optional - don't set placeholder
+        // The answer will come from the sub-questions
 
         // Check if exam period or unit changed - regenerate period question number
         $examPeriodChanged = $question->exam_period_id != $request->exam_period_id;

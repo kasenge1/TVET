@@ -166,6 +166,9 @@ class LearnController extends Controller
         // Find question by slug within this unit
         $question = Question::where('unit_id', $unit->id)
             ->where('slug', $questionSlug)
+            ->with(['subQuestions' => function($q) {
+                $q->orderBy('order');
+            }])
             ->first();
 
         if (!$question) {
