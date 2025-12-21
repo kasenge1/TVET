@@ -75,14 +75,23 @@ class Question extends Model
                 $baseSlug = $prefix . 'q' . $parent->period_question_number;
 
                 // Find which sub-question this is (a, b, c, etc.)
-                // Use the count of existing sub-questions for this parent
-                $existingCount = static::where('parent_question_id', $question->parent_question_id)
+                // Count only sub-questions for THIS specific parent
+                $existingCount = static::where('parent_question_id', $parent->id)
+                    ->whereNotNull('parent_question_id') // Ensure we're only counting sub-questions
                     ->count();
 
                 // Position is existingCount + 1 (for the one being created)
                 $subQuestionPosition = $existingCount + 1;
 
-                $letter = chr(96 + $subQuestionPosition); // 97 = 'a', 98 = 'b', etc.
+                // Ensure position is within valid range (1-26 for a-z)
+                if ($subQuestionPosition > 26) {
+                    // For more than 26 sub-questions, use format: a1, a2, etc.
+                    $letterIndex = (int) floor(($subQuestionPosition - 1) / 26);
+                    $numberPart = (($subQuestionPosition - 1) % 26) + 1;
+                    $letter = chr(97 + $letterIndex) . $numberPart;
+                } else {
+                    $letter = chr(96 + $subQuestionPosition); // 97 = 'a', 98 = 'b', etc.
+                }
 
                 return $baseSlug . $letter;
             }
