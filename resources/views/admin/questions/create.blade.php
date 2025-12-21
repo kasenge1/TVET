@@ -310,11 +310,14 @@
         ->groupBy('unit_id', 'exam_period_id')
         ->pluck('count', 'period_key');
 
-    // Get sub-question counts per parent
-    $subQuestionCountsJson = \App\Models\Question::whereNotNull('parent_question_id')
-        ->selectRaw('parent_question_id, COUNT(*) as sub_count')
+    // Get sub-question counts per parent (only count actual existing sub-questions)
+    $subQuestionCountsJson = \App\Models\Question::query()
+        ->whereNotNull('parent_question_id')
+        ->select('parent_question_id', \DB::raw('COUNT(*) as sub_count'))
         ->groupBy('parent_question_id')
-        ->pluck('sub_count', 'parent_question_id');
+        ->get()
+        ->pluck('sub_count', 'parent_question_id')
+        ->toArray();
 @endphp
 
 @push('styles')
@@ -430,8 +433,12 @@ function getNextPeriodQuestionNumber(unitId, examPeriodId) {
 // Generate next sub-question letter
 function getNextSubQuestionLetter(parentId) {
     const count = subQuestionCounts[parentId] || 0;
+
+    // Safety check: ensure count is a valid number and within reasonable range
+    const safeCount = Math.min(Math.max(parseInt(count) || 0, 0), 25);
+
     // Convert count to letter: 0=a, 1=b, 2=c, etc.
-    return String.fromCharCode(97 + count);
+    return String.fromCharCode(97 + safeCount);
 }
 
 // Cascading dropdown: Course -> Level -> Unit
