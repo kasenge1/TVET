@@ -159,7 +159,15 @@
 
         @media (min-width: 992px) {
             .auth-form-section {
-                max-width: 600px;
+                flex: 0 0 550px;
+                max-width: 550px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .auth-form-section {
+                flex: 0 0 580px;
+                max-width: 580px;
             }
         }
 

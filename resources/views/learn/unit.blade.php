@@ -8,6 +8,9 @@
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('learn.index') }}" class="text-decoration-none">{{ $course->title }}</a></li>
+            @if($unit->level)
+                <li class="breadcrumb-item"><span class="text-muted">{{ $unit->level->name }}</span></li>
+            @endif
             <li class="breadcrumb-item active" aria-current="page">{{ $unit->title }}</li>
         </ol>
     </nav>
@@ -17,6 +20,11 @@
         <div class="card-body text-white p-4">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
                 <div class="flex-grow-1">
+                    @if($unit->level)
+                        <span class="badge bg-white bg-opacity-25 mb-2">
+                            <i class="bi bi-layers me-1"></i>{{ $unit->level->name }}
+                        </span>
+                    @endif
                     <h1 class="h4 fw-bold mb-2">{{ $unit->title }}</h1>
                     <p class="mb-2 opacity-90">
                         <i class="bi bi-question-circle me-1"></i>{{ $questions->total() }} Questions

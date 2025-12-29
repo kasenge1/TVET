@@ -140,23 +140,15 @@ class Course extends Model
 
     /**
      * Get a display string for the course levels.
-     * Shows levels like "Level 3, 4, 5" or returns null if no levels.
-     * This is for backwards compatibility with views that used level_display.
+     * Shows the count of levels (e.g., "3 Levels") or returns null if no levels.
      */
     public function getLevelDisplayAttribute(): ?string
     {
-        $levels = $this->levels;
-        if ($levels->isEmpty()) {
+        $count = $this->levels()->count();
+        if ($count === 0) {
             return null;
         }
 
-        // If levels have level_number, use that for a concise display
-        $levelNumbers = $levels->pluck('level_number')->filter()->sort()->values();
-        if ($levelNumbers->isNotEmpty()) {
-            return 'Level ' . $levelNumbers->implode(', ');
-        }
-
-        // Otherwise, use level names
-        return $levels->pluck('name')->implode(', ');
+        return $count . ' ' . ($count === 1 ? 'Level' : 'Levels');
     }
 }

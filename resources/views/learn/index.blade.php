@@ -11,10 +11,12 @@
                 <div class="flex-grow-1">
                     <h1 class="h3 fw-bold mb-2">{{ $course->title }}</h1>
                     <p class="mb-2 opacity-90">
-                        @if($course->level_display)
-                            <span class="badge bg-white bg-opacity-25 me-2">{{ $course->level_display }}</span>
+                        @if($hasLevels)
+                            <span class="badge bg-white bg-opacity-25 me-2">
+                                <i class="bi bi-layers me-1"></i>{{ $course->levels->count() }} {{ $course->levels->count() === 1 ? 'Level' : 'Levels' }}
+                            </span>
                         @endif
-                        <span>{{ $course->units->count() }} Units</span>
+                        <span>{{ $allUnits->count() }} Units</span>
                         <span class="mx-2">&bull;</span>
                         <span>{{ $totalQuestions }} Questions</span>
                     </p>

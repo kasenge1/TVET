@@ -117,7 +117,8 @@ class LearnController extends Controller
             'unitProgress',
             'levelProgress',
             'hasLevels',
-            'unitsWithoutLevel'
+            'unitsWithoutLevel',
+            'allUnits'
         ));
     }
 
@@ -196,6 +197,9 @@ class LearnController extends Controller
         $lastViewed = QuestionView::getNextUnreadInUnit($user->id, $unit->id);
 
         $course = $enrollment->course;
+
+        // Load the unit's level if it has one
+        $unit->load('level');
 
         return view('learn.unit', compact('unit', 'questions', 'savedIds', 'viewedIds', 'unitProgress', 'lastViewed', 'course', 'examPeriods', 'selectedPeriod'));
     }
