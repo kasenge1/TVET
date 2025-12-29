@@ -114,76 +114,227 @@
     </script>
     @endif
 
-    <!-- Units Section -->
+    <!-- Levels & Units Section -->
     <div class="mb-4">
         <h2 class="h5 fw-bold mb-3">
             @if($progress['percentage'] > 0)
                 Continue Revising
             @else
-                Select a Unit to Start Revising
+                Select a Level to Start Revising
             @endif
         </h2>
 
-        <div class="row g-3">
-            @forelse($course->units as $index => $unit)
-                @php
-                    $unitProg = $unitProgress[$unit->id] ?? ['viewed' => 0, 'total' => 0, 'percentage' => 0];
-                    $isCompleted = $unitProg['percentage'] == 100;
-                    $isStarted = $unitProg['percentage'] > 0;
-                @endphp
-                <div class="col-12">
-                    <a href="{{ route('learn.unit', $unit->slug) }}" class="text-decoration-none">
-                        <div class="card border-0 shadow-sm h-100 unit-card {{ $isCompleted ? 'border-success' : '' }}">
-                            <div class="card-body p-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="{{ $isCompleted ? 'bg-success' : ($isStarted ? 'bg-primary' : 'bg-secondary') }} text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style="width: 45px; height: 45px;">
-                                        @if($isCompleted)
+        @if($hasLevels)
+            {{-- Display Levels with Units inside --}}
+            <div class="accordion" id="levelsAccordion">
+                @foreach($course->levels as $levelIndex => $level)
+                    @php
+                        $levelProg = $levelProgress[$level->id] ?? ['viewed' => 0, 'total' => 0, 'percentage' => 0];
+                        $isLevelCompleted = $levelProg['percentage'] == 100;
+                        $isLevelStarted = $levelProg['percentage'] > 0;
+                    @endphp
+                    <div class="accordion-item border-0 shadow-sm mb-3 rounded-3 overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button {{ $levelIndex > 0 ? 'collapsed' : '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#level{{ $level->id }}" aria-expanded="{{ $levelIndex === 0 ? 'true' : 'false' }}">
+                                <div class="d-flex align-items-center w-100 me-3">
+                                    <div class="{{ $isLevelCompleted ? 'bg-success' : ($isLevelStarted ? 'bg-primary' : 'bg-secondary') }} text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style="width: 45px; height: 45px;">
+                                        @if($isLevelCompleted)
                                             <i class="bi bi-check-lg"></i>
                                         @else
-                                            {{ $index + 1 }}
+                                            {{ $level->level_number ?? ($levelIndex + 1) }}
                                         @endif
                                     </div>
                                     <div class="flex-grow-1">
-                                        <h3 class="h6 fw-bold mb-1 text-dark">{{ $unit->title }}</h3>
+                                        <h3 class="h6 fw-bold mb-1">{{ $level->name }}</h3>
                                         <div class="d-flex align-items-center flex-wrap gap-2">
-                                            @if($unit->exam_period)
-                                                <span class="badge bg-light text-secondary small">
-                                                    <i class="bi bi-calendar-event me-1"></i>{{ $unit->exam_period }}
-                                                </span>
-                                            @endif
-                                            <div class="d-flex align-items-center">
+                                            <span class="text-muted small">{{ $level->units->count() }} Units</span>
+                                            <span class="text-muted small">&bull;</span>
+                                            <span class="text-muted small">{{ $levelProg['total'] }} Questions</span>
+                                            <div class="d-flex align-items-center ms-2">
                                                 <div class="progress me-2" style="height: 4px; width: 80px;">
-                                                    <div class="progress-bar {{ $isCompleted ? 'bg-success' : 'bg-primary' }}" style="width: {{ $unitProg['percentage'] }}%"></div>
+                                                    <div class="progress-bar {{ $isLevelCompleted ? 'bg-success' : 'bg-primary' }}" style="width: {{ $levelProg['percentage'] }}%"></div>
                                                 </div>
-                                                <span class="text-muted small">{{ $unitProg['viewed'] }}/{{ $unitProg['total'] }}</span>
+                                                <span class="text-muted small">{{ $levelProg['percentage'] }}%</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="ms-2 d-flex align-items-center">
-                                        @if($isCompleted)
-                                            <span class="badge bg-success-subtle text-success me-2">Complete</span>
-                                        @elseif($isStarted)
-                                            <span class="badge bg-primary-subtle text-primary me-2">{{ $unitProg['percentage'] }}%</span>
-                                        @endif
-                                        <i class="bi bi-chevron-right text-muted"></i>
-                                    </div>
+                                    @if($isLevelCompleted)
+                                        <span class="badge bg-success-subtle text-success me-2">Complete</span>
+                                    @elseif($isLevelStarted)
+                                        <span class="badge bg-primary-subtle text-primary me-2">{{ $levelProg['viewed'] }}/{{ $levelProg['total'] }}</span>
+                                    @endif
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="level{{ $level->id }}" class="accordion-collapse collapse {{ $levelIndex === 0 ? 'show' : '' }}" data-bs-parent="#levelsAccordion">
+                            <div class="accordion-body pt-0">
+                                <div class="row g-2">
+                                    @forelse($level->units as $unitIndex => $unit)
+                                        @php
+                                            $unitProg = $unitProgress[$unit->id] ?? ['viewed' => 0, 'total' => 0, 'percentage' => 0];
+                                            $isCompleted = $unitProg['percentage'] == 100;
+                                            $isStarted = $unitProg['percentage'] > 0;
+                                        @endphp
+                                        <div class="col-12">
+                                            <a href="{{ route('learn.unit', $unit->slug) }}" class="text-decoration-none">
+                                                <div class="card border h-100 unit-card {{ $isCompleted ? 'border-success' : 'border-light' }}">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="{{ $isCompleted ? 'bg-success' : ($isStarted ? 'bg-primary' : 'bg-light text-secondary') }} {{ $isCompleted || $isStarted ? 'text-white' : '' }} rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style="width: 36px; height: 36px; font-size: 0.875rem;">
+                                                                @if($isCompleted)
+                                                                    <i class="bi bi-check-lg"></i>
+                                                                @else
+                                                                    {{ $unitIndex + 1 }}
+                                                                @endif
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h4 class="h6 fw-semibold mb-1 text-dark" style="font-size: 0.95rem;">{{ $unit->title }}</h4>
+                                                                <div class="d-flex align-items-center flex-wrap gap-2">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="progress me-2" style="height: 3px; width: 60px;">
+                                                                            <div class="progress-bar {{ $isCompleted ? 'bg-success' : 'bg-primary' }}" style="width: {{ $unitProg['percentage'] }}%"></div>
+                                                                        </div>
+                                                                        <span class="text-muted small">{{ $unitProg['viewed'] }}/{{ $unitProg['total'] }}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="ms-2 d-flex align-items-center">
+                                                                @if($isCompleted)
+                                                                    <span class="badge bg-success-subtle text-success small me-2">Done</span>
+                                                                @elseif($isStarted)
+                                                                    <span class="badge bg-primary-subtle text-primary small me-2">{{ $unitProg['percentage'] }}%</span>
+                                                                @endif
+                                                                <i class="bi bi-chevron-right text-muted"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    @empty
+                                        <div class="col-12">
+                                            <div class="text-center py-3 text-muted">
+                                                <i class="bi bi-folder2-open me-1"></i>No units in this level yet
+                                            </div>
+                                        </div>
+                                    @endforelse
                                 </div>
                             </div>
                         </div>
-                    </a>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Units without a level (legacy) --}}
+            @if($unitsWithoutLevel->isNotEmpty())
+                <h3 class="h6 fw-bold mb-3 mt-4">Other Units</h3>
+                <div class="row g-3">
+                    @foreach($unitsWithoutLevel as $index => $unit)
+                        @php
+                            $unitProg = $unitProgress[$unit->id] ?? ['viewed' => 0, 'total' => 0, 'percentage' => 0];
+                            $isCompleted = $unitProg['percentage'] == 100;
+                            $isStarted = $unitProg['percentage'] > 0;
+                        @endphp
+                        <div class="col-12">
+                            <a href="{{ route('learn.unit', $unit->slug) }}" class="text-decoration-none">
+                                <div class="card border-0 shadow-sm h-100 unit-card {{ $isCompleted ? 'border-success' : '' }}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="{{ $isCompleted ? 'bg-success' : ($isStarted ? 'bg-primary' : 'bg-secondary') }} text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style="width: 45px; height: 45px;">
+                                                @if($isCompleted)
+                                                    <i class="bi bi-check-lg"></i>
+                                                @else
+                                                    {{ $index + 1 }}
+                                                @endif
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h3 class="h6 fw-bold mb-1 text-dark">{{ $unit->title }}</h3>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress me-2" style="height: 4px; width: 80px;">
+                                                        <div class="progress-bar {{ $isCompleted ? 'bg-success' : 'bg-primary' }}" style="width: {{ $unitProg['percentage'] }}%"></div>
+                                                    </div>
+                                                    <span class="text-muted small">{{ $unitProg['viewed'] }}/{{ $unitProg['total'] }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="ms-2 d-flex align-items-center">
+                                                @if($isCompleted)
+                                                    <span class="badge bg-success-subtle text-success me-2">Complete</span>
+                                                @elseif($isStarted)
+                                                    <span class="badge bg-primary-subtle text-primary me-2">{{ $unitProg['percentage'] }}%</span>
+                                                @endif
+                                                <i class="bi bi-chevron-right text-muted"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
                 </div>
-            @empty
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body text-center py-5">
-                            <i class="bi bi-folder-x display-4 text-muted mb-3"></i>
-                            <h4 class="text-muted">No Units Available</h4>
-                            <p class="text-muted mb-0">Units will appear here once they are added to this course.</p>
+            @endif
+        @else
+            {{-- No levels - show units directly (original behavior) --}}
+            <div class="row g-3">
+                @forelse($course->units as $index => $unit)
+                    @php
+                        $unitProg = $unitProgress[$unit->id] ?? ['viewed' => 0, 'total' => 0, 'percentage' => 0];
+                        $isCompleted = $unitProg['percentage'] == 100;
+                        $isStarted = $unitProg['percentage'] > 0;
+                    @endphp
+                    <div class="col-12">
+                        <a href="{{ route('learn.unit', $unit->slug) }}" class="text-decoration-none">
+                            <div class="card border-0 shadow-sm h-100 unit-card {{ $isCompleted ? 'border-success' : '' }}">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="{{ $isCompleted ? 'bg-success' : ($isStarted ? 'bg-primary' : 'bg-secondary') }} text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style="width: 45px; height: 45px;">
+                                            @if($isCompleted)
+                                                <i class="bi bi-check-lg"></i>
+                                            @else
+                                                {{ $index + 1 }}
+                                            @endif
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h3 class="h6 fw-bold mb-1 text-dark">{{ $unit->title }}</h3>
+                                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                                @if($unit->exam_period)
+                                                    <span class="badge bg-light text-secondary small">
+                                                        <i class="bi bi-calendar-event me-1"></i>{{ $unit->exam_period }}
+                                                    </span>
+                                                @endif
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress me-2" style="height: 4px; width: 80px;">
+                                                        <div class="progress-bar {{ $isCompleted ? 'bg-success' : 'bg-primary' }}" style="width: {{ $unitProg['percentage'] }}%"></div>
+                                                    </div>
+                                                    <span class="text-muted small">{{ $unitProg['viewed'] }}/{{ $unitProg['total'] }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ms-2 d-flex align-items-center">
+                                            @if($isCompleted)
+                                                <span class="badge bg-success-subtle text-success me-2">Complete</span>
+                                            @elseif($isStarted)
+                                                <span class="badge bg-primary-subtle text-primary me-2">{{ $unitProg['percentage'] }}%</span>
+                                            @endif
+                                            <i class="bi bi-chevron-right text-muted"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @empty
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-folder-x display-4 text-muted mb-3"></i>
+                                <h4 class="text-muted">No Units Available</h4>
+                                <p class="text-muted mb-0">Units will appear here once they are added to this course.</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endforelse
-        </div>
+                @endforelse
+            </div>
+        @endif
     </div>
 
     <!-- Ad Banner -->
@@ -205,6 +356,26 @@
     }
     .bg-primary-subtle {
         background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+    /* Level accordion styling */
+    .accordion-button {
+        background-color: #fff;
+        font-weight: 500;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: #f8f9fa;
+        color: inherit;
+        box-shadow: none;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,.125);
+    }
+    .accordion-button::after {
+        margin-left: auto;
+    }
+    .accordion-body {
+        background-color: #f8f9fa;
     }
 </style>
 @endpush

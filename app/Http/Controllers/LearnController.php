@@ -41,13 +41,35 @@ class LearnController extends Controller
             return redirect()->route('home')->with('error', 'Please register to access your course.');
         }
 
-        $course = $enrollment->course->load(['units' => function ($q) {
-            $q->withCount(['questions' => function ($query) {
-                $query->whereNull('parent_question_id'); // Only main questions
-            }])->orderBy('unit_number');
-        }]);
+        // Load course with levels and their units
+        $course = $enrollment->course->load([
+            'levels' => function ($q) {
+                $q->active()->ordered();
+            },
+            'levels.units' => function ($q) {
+                $q->withCount(['questions' => function ($query) {
+                    $query->whereNull('parent_question_id'); // Only main questions
+                }])->orderBy('unit_number');
+            },
+            'units' => function ($q) {
+                $q->withCount(['questions' => function ($query) {
+                    $query->whereNull('parent_question_id'); // Only main questions
+                }])->orderBy('unit_number');
+            }
+        ]);
 
-        $totalQuestions = $course->units->sum('questions_count');
+        // Get all units (both from levels and directly attached to course)
+        $allUnits = collect();
+        foreach ($course->levels as $level) {
+            $allUnits = $allUnits->merge($level->units);
+        }
+        // Add units without a level (legacy units directly attached to course)
+        $unitsWithoutLevel = $course->units->filter(function ($unit) {
+            return is_null($unit->level_id);
+        });
+        $allUnits = $allUnits->merge($unitsWithoutLevel);
+
+        $totalQuestions = $allUnits->sum('questions_count');
         $savedCount = $user->bookmarks()->count();
 
         // Get course progress
@@ -58,7 +80,7 @@ class LearnController extends Controller
 
         // Get progress per unit
         $unitProgress = [];
-        foreach ($course->units as $unit) {
+        foreach ($allUnits as $unit) {
             $viewedInUnit = QuestionView::getViewedCountInUnit($user->id, $unit->id);
             $unitProgress[$unit->id] = [
                 'viewed' => $viewedInUnit,
@@ -67,7 +89,36 @@ class LearnController extends Controller
             ];
         }
 
-        return view('learn.index', compact('course', 'totalQuestions', 'savedCount', 'progress', 'lastViewed', 'unitProgress'));
+        // Calculate progress per level
+        $levelProgress = [];
+        foreach ($course->levels as $level) {
+            $levelViewed = 0;
+            $levelTotal = 0;
+            foreach ($level->units as $unit) {
+                $levelViewed += $unitProgress[$unit->id]['viewed'] ?? 0;
+                $levelTotal += $unit->questions_count;
+            }
+            $levelProgress[$level->id] = [
+                'viewed' => $levelViewed,
+                'total' => $levelTotal,
+                'percentage' => $levelTotal > 0 ? round(($levelViewed / $levelTotal) * 100) : 0,
+            ];
+        }
+
+        // Check if course has levels
+        $hasLevels = $course->levels->isNotEmpty();
+
+        return view('learn.index', compact(
+            'course',
+            'totalQuestions',
+            'savedCount',
+            'progress',
+            'lastViewed',
+            'unitProgress',
+            'levelProgress',
+            'hasLevels',
+            'unitsWithoutLevel'
+        ));
     }
 
     /**
