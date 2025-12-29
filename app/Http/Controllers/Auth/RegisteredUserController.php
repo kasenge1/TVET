@@ -80,6 +80,9 @@ class RegisteredUserController extends Controller
                 'role' => 'student',
             ]);
 
+            // Assign Spatie student role
+            $user->assignRole('student');
+
             // Create enrollment
             Enrollment::create([
                 'user_id' => $user->id,

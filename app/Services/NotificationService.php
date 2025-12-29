@@ -100,7 +100,8 @@ class NotificationService
         ?array $data = null,
         bool $sendEmail = true
     ): int {
-        $adminIds = User::where('role', 'admin')->pluck('id')->toArray();
+        // Get admins using Spatie roles (super-admin and admin)
+        $adminIds = User::role(['super-admin', 'admin'])->pluck('id')->toArray();
         return $this->sendToMany(
             $adminIds, $type, $title, $message,
             $actionUrl, $icon, $iconColor, $data, $sendEmail
