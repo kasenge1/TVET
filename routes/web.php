@@ -356,6 +356,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     Route::middleware(['permission:edit questions'])->group(function () {
         Route::post('questions/generate-answer-preview', [AdminQuestionController::class, 'generateAnswerPreview'])->name('questions.generate-answer-preview');
+        Route::post('questions/quill-upload-image', [AdminQuestionController::class, 'uploadQuillImage'])->name('questions.quill-upload-image');
+        Route::post('questions/quill-upload-video', [AdminQuestionController::class, 'uploadQuillVideo'])->name('questions.quill-upload-video');
     });
     Route::middleware(['permission:delete questions'])->group(function () {
         Route::post('questions/bulk-action', [AdminQuestionController::class, 'bulkAction'])->name('questions.bulk-action');

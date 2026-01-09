@@ -158,7 +158,7 @@
 (function() {
     const textarea = document.getElementById('{{ $textareaId }}');
 
-    // Initialize Quill editor and expose globally
+    // Initialize Quill editor first
     const editorInstance = new Quill('#{{ $editorId }}', {
         theme: 'snow',
         modules: {
@@ -177,6 +177,78 @@
             ]
         },
         placeholder: '{{ $placeholder }}'
+    });
+
+    // Get toolbar and add custom handlers
+    const toolbar = editorInstance.getModule('toolbar');
+
+    // Custom image handler - uploads to server instead of base64
+    toolbar.addHandler('image', function() {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+
+        input.onchange = async function() {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Show loading indicator
+            const range = editorInstance.getSelection(true);
+            editorInstance.insertText(range.index, 'Uploading image...', { 'color': '#6c757d' });
+
+            try {
+                const response = await fetch('/admin/questions/quill-upload-image', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remove loading text
+                    editorInstance.deleteText(range.index, 18);
+
+                    // Insert the image
+                    const url = data.url || data.link;
+                    editorInstance.insertEmbed(range.index, 'image', url);
+                    editorInstance.setSelection(range.index + 1);
+                } else {
+                    // Remove loading text and show error
+                    editorInstance.deleteText(range.index, 18);
+                    alert('Error uploading image: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                // Remove loading text and show error
+                editorInstance.deleteText(range.index, 18);
+                alert('Error uploading image: ' + error.message);
+            }
+        };
+    });
+
+    // Custom video handler - processes YouTube URLs
+    toolbar.addHandler('video', function() {
+        const url = prompt('Enter video URL (YouTube or direct link):');
+
+        if (url) {
+            const range = editorInstance.getSelection(true);
+
+            // For YouTube URLs, convert to embed format
+            let embedUrl = url;
+            const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+            if (youtubeMatch) {
+                embedUrl = 'https://www.youtube-nocookie.com/embed/' + youtubeMatch[1];
+            }
+
+            editorInstance.insertEmbed(range.index, 'video', embedUrl);
+            editorInstance.setSelection(range.index + 1);
+        }
     });
 
     // Expose editor instance globally for potential external access

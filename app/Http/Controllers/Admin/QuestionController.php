@@ -240,9 +240,19 @@ class QuestionController extends Controller
         // Sanitize HTML content to prevent XSS attacks
         if (!empty($validated['question_text'])) {
             $validated['question_text'] = Purify::clean($validated['question_text']);
+
+            // Delete old embedded images if question_text changed
+            if ($question->question_text && $question->question_text !== $validated['question_text']) {
+                $this->deleteEmbeddedImages($question->question_text);
+            }
         }
         if (!empty($validated['answer_text'])) {
             $validated['answer_text'] = Purify::clean($validated['answer_text']);
+
+            // Delete old embedded images if answer_text changed
+            if ($question->answer_text && $question->answer_text !== $validated['answer_text']) {
+                $this->deleteEmbeddedImages($question->answer_text);
+            }
         }
 
         // Handle multiple question images upload
@@ -303,24 +313,28 @@ class QuestionController extends Controller
         $isSubQuestion = !is_null($question->parent_question_id);
         $parentQuestionId = $question->parent_question_id;
 
-        // Delete question images
+        // Delete question images from JSON column
         if ($question->question_images) {
             foreach ($question->question_images as $image) {
                 Storage::disk('public')->delete($image);
             }
         }
 
-        // Delete answer images
+        // Delete answer images from JSON column
         if ($question->answer_images) {
             foreach ($question->answer_images as $image) {
                 Storage::disk('public')->delete($image);
             }
         }
 
+        // Delete embedded images from HTML content (Quill editor images)
+        $this->deleteEmbeddedImages($question->question_text);
+        $this->deleteEmbeddedImages($question->answer_text);
+
         // If this is a parent question, also delete all sub-questions
         if ($question->has_sub_questions) {
             foreach ($question->subQuestions as $subQuestion) {
-                // Delete sub-question images
+                // Delete sub-question images from JSON column
                 if ($subQuestion->question_images) {
                     foreach ($subQuestion->question_images as $image) {
                         Storage::disk('public')->delete($image);
@@ -331,6 +345,11 @@ class QuestionController extends Controller
                         Storage::disk('public')->delete($image);
                     }
                 }
+
+                // Delete embedded images from sub-question HTML content
+                $this->deleteEmbeddedImages($subQuestion->question_text);
+                $this->deleteEmbeddedImages($subQuestion->answer_text);
+
                 $subQuestion->delete();
             }
         }
@@ -809,17 +828,29 @@ class QuestionController extends Controller
                 $questions = Question::whereIn('id', $validated['ids'])->get();
 
                 foreach ($questions as $question) {
-                    // Delete question images
+                    // Delete question images from JSON column
                     if ($question->question_images) {
                         foreach ($question->question_images as $image) {
                             Storage::disk('public')->delete($image);
                         }
                     }
 
-                    // Delete answer images
+                    // Delete answer images from JSON column
                     if ($question->answer_images) {
                         foreach ($question->answer_images as $image) {
                             Storage::disk('public')->delete($image);
+                        }
+                    }
+
+                    // Delete embedded images from HTML content (Quill editor images)
+                    $this->deleteEmbeddedImages($question->question_text);
+                    $this->deleteEmbeddedImages($question->answer_text);
+
+                    // Also handle sub-questions if this is a parent question
+                    if ($question->has_sub_questions) {
+                        foreach ($question->subQuestions as $subQuestion) {
+                            $this->deleteEmbeddedImages($subQuestion->question_text);
+                            $this->deleteEmbeddedImages($subQuestion->answer_text);
                         }
                     }
                 }
@@ -834,5 +865,92 @@ class QuestionController extends Controller
         }
 
         return redirect()->route('admin.questions.index')->with('success', $message);
+    }
+
+    /**
+     * Delete images embedded in HTML content (from Quill editor).
+     */
+    protected function deleteEmbeddedImages($htmlContent)
+    {
+        if (empty($htmlContent)) {
+            return;
+        }
+
+        // Parse HTML to find all img tags
+        preg_match_all('/<img[^>]+src=["\']([^"\']+)["\'][^>]*>/i', $htmlContent, $matches);
+
+        if (!empty($matches[1])) {
+            foreach ($matches[1] as $imageUrl) {
+                // Check if it's a local storage URL
+                if (str_contains($imageUrl, '/storage/')) {
+                    // Extract the file path from the URL
+                    $path = str_replace(asset('storage/'), '', $imageUrl);
+                    $path = str_replace('/storage/', '', $path);
+
+                    // Delete the file if it exists
+                    if (Storage::disk('public')->exists($path)) {
+                        Storage::disk('public')->delete($path);
+                    }
+                }
+            }
+        }
+    }
+    public function uploadQuillImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:5120', // Max 5MB
+        ]);
+
+        if ($request->hasFile('image')) {
+            // Store the image in the public disk
+            $path = $request->file('image')->store('quill-images/' . date('Y/m'), 'public');
+
+            // Generate the URL
+            $url = asset('storage/' . $path);
+
+            // Return Quill-compatible response
+            return response()->json([
+                'success' => true,
+                'url' => $url,
+                'link' => $url, // Quill sometimes uses 'link' instead of 'url'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No image file received.',
+        ], 400);
+    }
+
+    /**
+     * Upload video from Quill editor (by URL).
+     * Validates and returns the embed URL.
+     */
+    public function uploadQuillVideo(Request $request)
+    {
+        $request->validate([
+            'url' => 'required|url',
+        ]);
+
+        $url = $request->input('url');
+
+        // Check if it's a YouTube URL
+        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $matches)) {
+            $videoId = $matches[1];
+            $embedUrl = 'https://www.youtube-nocookie.com/embed/' . $videoId;
+
+            return response()->json([
+                'success' => true,
+                'url' => $embedUrl,
+                'link' => $embedUrl,
+            ]);
+        }
+
+        // For other video URLs, return as-is
+        return response()->json([
+            'success' => true,
+            'url' => $url,
+            'link' => $url,
+        ]);
     }
 }

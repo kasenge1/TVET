@@ -47,6 +47,8 @@ return [
             'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align',
             'AutoFormat.AutoParagraph' => false,
             'AutoFormat.RemoveEmpty' => false,
+            // Allow data URIs for embedded images (base64)
+            'URI.AllowedSchemes' => ['http' => true, 'https' => true, 'data' => true],
         ],
 
     ],

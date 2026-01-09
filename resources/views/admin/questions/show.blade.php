@@ -316,6 +316,57 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    /* Style images within Quill content for better display */
+    .quill-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.375rem;
+        margin: 1rem 0;
+        display: block;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Center images on mobile and tablet, left-align on desktop */
+    @media (max-width: 991px) {
+        .quill-content img {
+            margin: 1rem auto;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .quill-content img {
+            margin: 1rem 0;
+        }
+    }
+
+    /* Style tables within Quill content */
+    .quill-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+
+    .quill-content table th,
+    .quill-content table td {
+        border: 1px solid #dee2e6;
+        padding: 0.5rem;
+    }
+
+    /* Style lists within Quill content */
+    .quill-content ul,
+    .quill-content ol {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .quill-content li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
