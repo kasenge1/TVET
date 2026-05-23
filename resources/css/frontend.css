@@ -293,6 +293,9 @@ a:hover {
     border-radius: var(--fe-radius-lg);
     overflow: hidden;
     transition: all var(--fe-transition-slow);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .fe-card:hover {
@@ -345,6 +348,9 @@ a:hover {
 
 .fe-card-body {
     padding: 1.25rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .fe-card-meta {
@@ -367,6 +373,7 @@ a:hover {
     color: var(--fe-text-secondary);
     line-height: 1.6;
     margin-bottom: 0;
+    flex-grow: 1;
 }
 
 .fe-card-footer {
