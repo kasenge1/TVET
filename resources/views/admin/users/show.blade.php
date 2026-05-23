@@ -31,15 +31,29 @@
                 <p class="text-muted mb-2">{{ $user->email }}</p>
 
                 <div class="d-flex gap-2 justify-content-center mb-3">
-                    @if($user->role === 'admin')
-                        <span class="badge-modern badge bg-danger">
-                            <i class="bi bi-shield-fill me-1"></i>Admin
-                        </span>
-                    @else
-                        <span class="badge-modern badge bg-info">
-                            <i class="bi bi-person-fill me-1"></i>Student
-                        </span>
-                    @endif
+                    @foreach($user->roles as $role)
+                        @if($role->name === 'super-admin')
+                            <span class="badge-modern badge bg-danger">
+                                <i class="bi bi-shield-fill me-1"></i>{{ ucwords(str_replace('-', ' ', $role->name)) }}
+                            </span>
+                        @elseif($role->name === 'admin')
+                            <span class="badge-modern badge bg-primary">
+                                <i class="bi bi-shield-fill me-1"></i>{{ ucwords(str_replace('-', ' ', $role->name)) }}
+                            </span>
+                        @elseif($role->name === 'content-manager')
+                            <span class="badge-modern badge bg-info">
+                                <i class="bi bi-shield-fill me-1"></i>{{ ucwords(str_replace('-', ' ', $role->name)) }}
+                            </span>
+                        @elseif($role->name === 'question-editor')
+                            <span class="badge-modern badge bg-success">
+                                <i class="bi bi-shield-fill me-1"></i>{{ ucwords(str_replace('-', ' ', $role->name)) }}
+                            </span>
+                        @else
+                            <span class="badge-modern badge bg-secondary">
+                                <i class="bi bi-person me-1"></i>{{ ucwords(str_replace('-', ' ', $role->name)) }}
+                            </span>
+                        @endif
+                    @endforeach
 
                     @if($user->subscription_tier === 'premium')
                         <span class="badge-modern badge bg-warning text-dark">

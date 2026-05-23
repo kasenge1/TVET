@@ -164,6 +164,9 @@ class UserController extends Controller
         // Assign roles using Spatie
         $user->syncRoles($roles);
 
+        // Sync legacy role column with highest priority role
+        $user->update(['role' => $this->getPrimaryRole($roles)]);
+
         // Send credentials email if requested
         if ($sendCredentials) {
             try {
@@ -275,6 +278,9 @@ class UserController extends Controller
                 $roles[] = 'super-admin';
             }
             $user->syncRoles($roles);
+
+            // Sync legacy role column with highest priority role
+            $user->update(['role' => $this->getPrimaryRole($roles)]);
         }
 
         return redirect()->route('admin.users.index')
@@ -512,5 +518,21 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', "You have stopped impersonating {$impersonatedUserName} and returned to your admin account.");
+    }
+
+    /**
+     * Get the primary role from a list of roles (highest priority first).
+     */
+    private function getPrimaryRole(array $roles): string
+    {
+        $priority = ['super-admin', 'admin', 'content-manager', 'question-editor', 'blog-editor', 'subscription-manager', 'student'];
+
+        foreach ($priority as $role) {
+            if (in_array($role, $roles)) {
+                return $role;
+            }
+        }
+
+        return 'student';
     }
 }
