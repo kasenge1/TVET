@@ -6,66 +6,94 @@
 @section('main')
 <!-- Quick Navigation -->
 <div class="row g-2 mb-4">
+    @can('manage branding')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.branding') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-palette d-block mb-1"></i>
             <small>Branding</small>
         </a>
     </div>
+    @endcan
+    @can('manage settings')
+    <div class="col-6 col-md-4 col-lg">
+        <a href="{{ route('admin.settings.seo') }}" class="btn btn-outline-secondary w-100 py-2">
+            <i class="bi bi-search d-block mb-1"></i>
+            <small>SEO</small>
+        </a>
+    </div>
+    @endcan
+    @can('manage hero settings')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.hero') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-stars d-block mb-1"></i>
             <small>Hero</small>
         </a>
     </div>
+    @endcan
+    @can('manage contact settings')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.contact') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-telephone d-block mb-1"></i>
             <small>Contact</small>
         </a>
     </div>
+    @endcan
+    @can('manage social settings')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.social') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-share d-block mb-1"></i>
             <small>Social</small>
         </a>
     </div>
+    @endcan
+    @can('manage payment settings')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.payments') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-credit-card d-block mb-1"></i>
             <small>Payments</small>
         </a>
     </div>
+    @endcan
+    @can('manage email settings')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.email') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-envelope d-block mb-1"></i>
             <small>Email</small>
         </a>
     </div>
+    @endcan
+    @can('manage ai settings')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.ai') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-robot d-block mb-1"></i>
             <small>AI</small>
         </a>
     </div>
+    @endcan
+    @can('manage maintenance')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.maintenance') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-tools d-block mb-1"></i>
             <small>Maintenance</small>
         </a>
     </div>
+    @endcan
+    @can('view system info')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.system') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-hdd-stack d-block mb-1"></i>
             <small>System</small>
         </a>
     </div>
+    @endcan
+    @can('manage security settings')
     <div class="col-6 col-md-4 col-lg">
         <a href="{{ route('admin.settings.recaptcha') }}" class="btn btn-outline-secondary w-100 py-2">
             <i class="bi bi-shield-check d-block mb-1"></i>
             <small>reCAPTCHA</small>
         </a>
     </div>
+    @endcan
 </div>
 
 <div class="row">

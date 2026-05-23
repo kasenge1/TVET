@@ -661,6 +661,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('settings/routes/clear', [AdminSettingsController::class, 'clearRoutes'])->name('settings.routes.clear');
     });
 
+    // SEO Settings - manage settings
+    Route::middleware(['permission:manage settings'])->group(function () {
+        Route::get('settings/seo', [AdminSettingsController::class, 'seo'])->name('settings.seo');
+        Route::put('settings/seo', [AdminSettingsController::class, 'updateSeo'])->name('settings.seo.update');
+        Route::put('settings/seo/robots', [AdminSettingsController::class, 'updateRobotsTxt'])->name('settings.seo.robots.update');
+    });
+
     // Notifications - sending requires 'send notifications' permission
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::middleware(['permission:send notifications'])->group(function () {

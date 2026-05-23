@@ -577,4 +577,72 @@ class SettingsController extends Controller
 
         return back()->with('success', 'Hero section settings updated successfully!');
     }
+
+    /**
+     * SEO settings page.
+     */
+    public function seo()
+    {
+        $seoSettings = SiteSetting::getSeoSettings();
+        return view('admin.settings.seo', compact('seoSettings'));
+    }
+
+    /**
+     * Update SEO settings.
+     */
+    public function updateSeo(Request $request)
+    {
+        $validated = $request->validate([
+            'seo_meta_title' => 'nullable|string|max:70',
+            'seo_meta_description' => 'nullable|string|max:160',
+            'seo_meta_keywords' => 'nullable|string|max:500',
+            'seo_og_image' => 'nullable|string|max:500',
+            'seo_google_analytics_id' => 'nullable|string|max:50',
+            'seo_google_search_console' => 'nullable|string|max:255',
+            'seo_google_tag_manager' => 'nullable|string|max:50',
+            'seo_schema_org_type' => 'nullable|string|max:100',
+            'seo_schema_org_name' => 'nullable|string|max:255',
+            'seo_schema_org_description' => 'nullable|string|max:500',
+            'seo_custom_head_code' => 'nullable|string|max:10000',
+            'seo_enable_json_ld' => 'nullable|string',
+            'seo_enable_open_graph' => 'nullable|string',
+            'seo_enable_twitter_cards' => 'nullable|string',
+        ]);
+
+        // Strip seo_ prefix to match setSeoSettings() allowed keys
+        $settings = [];
+        foreach ($validated as $key => $value) {
+            $settings[str_replace('seo_', '', $key)] = $value;
+        }
+
+        // Handle toggle fields
+        $settings['enable_json_ld'] = isset($validated['seo_enable_json_ld']) ? '1' : '0';
+        $settings['enable_open_graph'] = isset($validated['seo_enable_open_graph']) ? '1' : '0';
+        $settings['enable_twitter_cards'] = isset($validated['seo_enable_twitter_cards']) ? '1' : '0';
+
+        SiteSetting::setSeoSettings($settings);
+
+        return back()->with('success', 'SEO settings updated successfully!');
+    }
+
+    /**
+     * Update robots.txt file.
+     */
+    public function updateRobotsTxt(Request $request)
+    {
+        $validated = $request->validate([
+            'robots_txt' => 'required|string|max:5000',
+        ]);
+
+        // Save to database
+        SiteSetting::set('seo_robots_txt', $validated['robots_txt'], 'seo');
+
+        // Also write to public/robots.txt
+        $robotsPath = public_path('robots.txt');
+        if (file_put_contents($robotsPath, $validated['robots_txt']) === false) {
+            return back()->with('error', 'Settings saved to database, but failed to write robots.txt file. Check file permissions.');
+        }
+
+        return back()->with('success', 'robots.txt updated successfully!');
+    }
 }

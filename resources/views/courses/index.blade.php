@@ -5,55 +5,58 @@
 
 @section('content')
 <!-- Hero Section -->
-<section class="hero-gradient text-white py-5">
-    <div class="container position-relative">
+<section class="fe-page-hero text-white">
+    <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <h1 class="display-5 fw-bold mb-3">TVET Courses</h1>
-                <p class="lead mb-0 opacity-90">Explore our comprehensive collection of Technical and Vocational Education courses. Find past exam questions and prepare effectively for your exams.</p>
+                <h1 class="fe-hero-title mb-3" style="font-size: 2.5rem;">TVET Courses</h1>
+                <p class="fe-hero-subtitle mb-0">Explore our comprehensive collection of Technical and Vocational Education courses. Find past exam questions and prepare effectively for your exams.</p>
             </div>
             <div class="col-lg-4 text-end d-none d-lg-block">
-                <i class="bi bi-mortarboard-fill display-1 opacity-50"></i>
+                <i class="bi bi-mortarboard-fill display-1 opacity-25"></i>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Courses Section -->
-<section class="py-5">
+<section class="fe-section">
     <div class="container">
         <!-- Search and Filter -->
         <form action="{{ route('courses.index') }}" method="GET" id="filterForm">
-            <div class="row mb-4 g-3">
-                <div class="col-md-5">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                        <input type="text" class="form-control border-start-0" placeholder="Search courses..." name="search" id="courseSearch" value="{{ request('search') }}">
+            <div class="fe-sidebar-card mb-4" style="padding: 1.25rem;">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem; color: var(--fe-text-secondary); margin-bottom: 0.4rem;">Search</label>
+                        <div class="position-relative">
+                            <i class="bi bi-search position-absolute" style="left: 14px; top: 50%; transform: translateY(-50%); color: var(--fe-text-muted); font-size: 0.9rem;"></i>
+                            <input type="text" class="fe-search-input w-100" style="padding-left: 2.5rem;" placeholder="Search courses..." name="search" id="courseSearch" value="{{ request('search') }}">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <select class="form-select" id="levelFilter" name="level">
-                        <option value="">All Levels</option>
-                        @foreach($levels as $level)
-                            <option value="{{ $level->id }}" {{ request('level') == $level->id ? 'selected' : '' }}>{{ $level->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="sortBy" name="sort">
-                        <option value="name" {{ request('sort', 'name') == 'name' ? 'selected' : '' }}>Sort by Name</option>
-                        <option value="units" {{ request('sort') == 'units' ? 'selected' : '' }}>Sort by Units</option>
-                        <option value="questions" {{ request('sort') == 'questions' ? 'selected' : '' }}>Sort by Questions</option>
-                    </select>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem; color: var(--fe-text-secondary); margin-bottom: 0.4rem;">Level</label>
+                        <select class="fe-filter-select w-100" id="levelFilter" name="level">
+                            <option value="">All Levels</option>
+                            @foreach($levels as $level)
+                                <option value="{{ $level->id }}" {{ request('level') == $level->id ? 'selected' : '' }}>{{ $level->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem; color: var(--fe-text-secondary); margin-bottom: 0.4rem;">Sort By</label>
+                        <select class="fe-filter-select w-100" id="sortBy" name="sort">
+                            <option value="name" {{ request('sort', 'name') == 'name' ? 'selected' : '' }}>Name</option>
+                            <option value="units" {{ request('sort') == 'units' ? 'selected' : '' }}>Units</option>
+                            <option value="questions" {{ request('sort') == 'questions' ? 'selected' : '' }}>Questions</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </form>
 
         <!-- Results Count -->
         <div class="mb-4">
-            <p class="text-muted mb-0">
+            <p class="mb-0" style="font-size: 0.85rem; color: var(--fe-text-muted);">
                 Showing {{ $courses->firstItem() ?? 0 }} - {{ $courses->lastItem() ?? 0 }} of {{ $courses->total() }} courses
             </p>
         </div>
@@ -62,45 +65,45 @@
         <div class="row g-4" id="coursesGrid">
             @forelse($courses as $course)
             <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    @if($course->thumbnail_url)
-                    <img src="{{ asset('storage/' . $course->thumbnail_url) }}" class="card-img-top" alt="{{ $course->title }}" style="height: 180px; object-fit: cover;">
-                    @else
-                    <div class="card-img-top bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="height: 180px;">
-                        <i class="bi bi-book text-primary display-3"></i>
+                <div class="fe-card">
+                    <div class="fe-card-img">
+                        @if($course->thumbnail_url)
+                        <img src="{{ asset('storage/' . $course->thumbnail_url) }}" alt="{{ $course->title }}">
+                        @else
+                        <div class="fe-card-img-placeholder"><i class="bi bi-book"></i></div>
+                        @endif
+                        @if($course->level_display)
+                            <span class="fe-card-badge">{{ $course->level_display }}</span>
+                        @endif
                     </div>
-                    @endif
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            @if($course->level_display)
-                                <span class="badge bg-primary bg-opacity-10 text-primary">{{ $course->level_display }}</span>
-                            @else
-                                <span></span>
-                            @endif
+                    <div class="fe-card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="fe-card-meta mb-0">
+                                <i class="bi bi-collection me-1"></i>{{ $course->units_count }} Units
+                            </div>
                             @if($course->code)
-                                <span class="text-muted small">{{ $course->code }}</span>
+                                <span style="font-size: 0.7rem; color: var(--fe-text-muted);">{{ $course->code }}</span>
                             @endif
                         </div>
-                        <h5 class="card-title fw-bold mb-2 course-title">{{ Str::limit($course->title, 50) }}</h5>
-                        <p class="card-text text-muted small mb-3 course-description flex-grow-1">{{ Str::limit(strip_tags($course->description), 80) }}</p>
-                        <div class="d-flex gap-3 text-muted small">
-                            <span><i class="bi bi-collection me-1"></i>{{ $course->units_count }} Units</span>
+                        <h5 class="fe-card-title">{{ Str::limit($course->title, 50) }}</h5>
+                        <p class="fe-card-desc mb-3">{{ Str::limit(strip_tags($course->description), 80) }}</p>
+                        <div class="d-flex gap-3" style="font-size: 0.75rem; color: var(--fe-text-muted);">
                             <span><i class="bi bi-question-circle me-1"></i>{{ $course->questions_count }} Questions</span>
                         </div>
                     </div>
-                    <div class="card-footer bg-transparent border-0 pt-0">
-                        <a href="{{ route('courses.show', $course) }}" class="btn btn-primary w-100">
-                            <i class="bi bi-eye me-2"></i>View Course
+                    <div class="fe-card-footer">
+                        <a href="{{ route('courses.show', $course) }}" class="fe-btn fe-btn-primary w-100">
+                            View Course <i class="bi bi-arrow-right ms-2"></i>
                         </a>
                     </div>
                 </div>
             </div>
             @empty
             <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="bi bi-inbox display-1 text-muted opacity-50"></i>
-                    <h4 class="mt-3 text-muted">No Courses Available</h4>
-                    <p class="text-muted">Check back later for new courses.</p>
+                <div class="fe-empty-state">
+                    <i class="bi bi-inbox d-block"></i>
+                    <h5>No Courses Available</h5>
+                    <p>Check back later for new courses.</p>
                 </div>
             </div>
             @endforelse
@@ -109,128 +112,29 @@
         <!-- Pagination -->
         @if($courses->hasPages())
         <div class="d-flex justify-content-center mt-5">
-            {{ $courses->links() }}
+            <nav class="fe-pagination">{{ $courses->links() }}</nav>
         </div>
         @endif
     </div>
 </section>
 
 <!-- CTA Section -->
-<section class="hero-gradient text-white py-5">
-    <div class="container text-center position-relative">
-        <h2 class="fw-bold mb-3">Ready to Start Learning?</h2>
-        <p class="lead mb-4 opacity-90">Join thousands of students preparing for their TVET exams with our comprehensive question bank.</p>
+<section class="fe-cta text-center">
+    <div class="container">
+        <h2 class="fe-cta-title">Ready to Start Learning?</h2>
+        <p class="fe-cta-subtitle">Join thousands of students preparing for their TVET exams with our comprehensive question bank.</p>
         @guest
-            <a href="{{ route('register') }}" class="btn btn-light btn-lg px-5">
+            <a href="{{ route('register') }}" class="fe-btn fe-btn-white fe-btn-lg">
                 <i class="bi bi-person-plus me-2"></i>Register Now
             </a>
         @else
-            <a href="{{ route('learn.index') }}" class="btn btn-light btn-lg px-5">
+            <a href="{{ route('learn.index') }}" class="fe-btn fe-btn-white fe-btn-lg">
                 <i class="bi bi-book me-2"></i>Continue Learning
             </a>
         @endguest
     </div>
 </section>
 @endsection
-
-@push('styles')
-<style>
-    /* Course cards styling */
-    .hover-lift {
-        transition: all 0.3s ease;
-        border-radius: 16px;
-        overflow: hidden;
-    }
-
-    .hover-lift:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    /* Course cards consistent sizing */
-    .course-title {
-        min-height: 48px;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .course-description {
-        min-height: 40px;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    /* Pagination styling */
-    .pagination {
-        gap: 0.25rem;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .pagination .page-link {
-        border-radius: 8px;
-        border: none;
-        padding: 0.5rem 1rem;
-        color: #667eea;
-        background: #f8f9fa;
-        transition: all 0.2s ease;
-    }
-
-    .pagination .page-link:hover {
-        background: #667eea;
-        color: white;
-    }
-
-    .pagination .page-item.active .page-link {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .pagination .page-item.disabled .page-link {
-        background: #e9ecef;
-        color: #adb5bd;
-    }
-
-    /* Mobile responsive styles for courses page */
-    @media (max-width: 767.98px) {
-        .course-title {
-            min-height: 40px;
-            font-size: 0.9rem;
-        }
-
-        .course-description {
-            min-height: 32px;
-            font-size: 0.75rem;
-        }
-
-        .pagination .page-link {
-            padding: 0.35rem 0.6rem;
-            font-size: 0.75rem;
-        }
-
-        /* Course stats */
-        .d-flex.gap-3.text-muted.small span {
-            font-size: 0.7rem;
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .course-title {
-            min-height: 36px;
-            font-size: 0.85rem;
-        }
-
-        .pagination .page-link {
-            padding: 0.3rem 0.5rem;
-            font-size: 0.7rem;
-        }
-    }
-</style>
-@endpush
 
 @push('scripts')
 <script>
@@ -241,24 +145,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const sortBy = document.getElementById('sortBy');
     let searchTimeout;
 
-    // Submit form on level or sort change
-    levelFilter.addEventListener('change', function() {
-        filterForm.submit();
-    });
+    levelFilter.addEventListener('change', function() { filterForm.submit(); });
+    sortBy.addEventListener('change', function() { filterForm.submit(); });
 
-    sortBy.addEventListener('change', function() {
-        filterForm.submit();
-    });
-
-    // Debounced search - submit after user stops typing
     searchInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(function() {
-            filterForm.submit();
-        }, 500);
+        searchTimeout = setTimeout(function() { filterForm.submit(); }, 500);
     });
 
-    // Submit on Enter key
     searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();

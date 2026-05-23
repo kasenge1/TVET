@@ -667,4 +667,97 @@ class SiteSetting extends Model
 
         return static::getHeroSettings();
     }
+
+    /**
+     * Get SEO settings
+     */
+    public static function getSeoSettings()
+    {
+        return [
+            'meta_title' => static::get('seo_meta_title', ''),
+            'meta_description' => static::get('seo_meta_description', 'Access thousands of past papers, study materials, and practice questions to ace your KNEC examinations.'),
+            'meta_keywords' => static::get('seo_meta_keywords', 'TVET, KNEC, past papers, exam revision, Kenya education, diploma, certificate, technical education'),
+            'og_image' => static::get('seo_og_image', ''),
+            'google_analytics_id' => static::get('seo_google_analytics_id', ''),
+            'google_search_console' => static::get('seo_google_search_console', ''),
+            'google_tag_manager' => static::get('seo_google_tag_manager', ''),
+            'robots_txt' => static::get('seo_robots_txt', ''),
+            'schema_org_type' => static::get('seo_schema_org_type', 'EducationalOrganization'),
+            'schema_org_name' => static::get('seo_schema_org_name', 'TVET Revision'),
+            'schema_org_description' => static::get('seo_schema_org_description', 'Kenya\'s leading platform for TVET exam preparation'),
+            'custom_head_code' => static::get('seo_custom_head_code', ''),
+            'enable_json_ld' => static::get('seo_enable_json_ld', '1') === '1',
+            'enable_open_graph' => static::get('seo_enable_open_graph', '1') === '1',
+            'enable_twitter_cards' => static::get('seo_enable_twitter_cards', '1') === '1',
+        ];
+    }
+
+    /**
+     * Set SEO settings
+     */
+    public static function setSeoSettings(array $settings)
+    {
+        $allowedKeys = [
+            'meta_title', 'meta_description', 'meta_keywords', 'og_image',
+            'google_analytics_id', 'google_search_console', 'google_tag_manager',
+            'robots_txt', 'schema_org_type', 'schema_org_name', 'schema_org_description',
+            'custom_head_code', 'enable_json_ld', 'enable_open_graph', 'enable_twitter_cards',
+        ];
+
+        foreach ($settings as $key => $value) {
+            if (in_array($key, $allowedKeys)) {
+                static::set("seo_{$key}", $value ?? '', 'seo');
+            }
+        }
+
+        return static::getSeoSettings();
+    }
+
+    /**
+     * Get Google Analytics ID
+     */
+    public static function getGoogleAnalyticsId()
+    {
+        return static::get('seo_google_analytics_id', '');
+    }
+
+    /**
+     * Get Google Tag Manager ID
+     */
+    public static function getGoogleTagManagerId()
+    {
+        return static::get('seo_google_tag_manager', '');
+    }
+
+    /**
+     * Get Google Search Console verification code
+     */
+    public static function getGoogleSearchConsole()
+    {
+        return static::get('seo_google_search_console', '');
+    }
+
+    /**
+     * Get custom head code
+     */
+    public static function getCustomHeadCode()
+    {
+        return static::get('seo_custom_head_code', '');
+    }
+
+    /**
+     * Get SEO robots txt content
+     */
+    public static function getSeoRobotsTxt()
+    {
+        return static::get('seo_robots_txt', '');
+    }
+
+    /**
+     * Check if JSON-LD is enabled
+     */
+    public static function jsonLdEnabled()
+    {
+        return static::get('seo_enable_json_ld', '1') === '1';
+    }
 }

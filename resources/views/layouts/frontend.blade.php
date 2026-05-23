@@ -2,6 +2,14 @@
 @php
     $darkModeEnabled = \App\Models\SiteSetting::darkModeEnabled();
     $defaultTheme = \App\Models\SiteSetting::get('default_theme', 'light');
+    $seoSettings = \App\Models\SiteSetting::getSeoSettings();
+    $siteName = \App\Models\SiteSetting::get('site_name', config('app.name', 'TVET Revision'));
+
+    // Default values from SEO settings
+    $defaultTitle = $seoSettings['meta_title'] ?: $siteName . ' - KNEC Exam Preparation';
+    $defaultDescription = $seoSettings['meta_description'] ?: 'Access comprehensive TVET past exam questions, study materials, and prepare effectively for your KNEC exams.';
+    $defaultKeywords = $seoSettings['meta_keywords'] ?: 'TVET, KNEC, past papers, exam revision, Kenya education, diploma, certificate, technical education';
+    $defaultOgImage = $seoSettings['og_image'] ? asset($seoSettings['og_image']) : asset('images/og-default.png');
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-bs-theme="light">
 <head>
@@ -10,30 +18,64 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="color-scheme" content="light dark">
 
-    <title>@yield('title', config('app.name', 'TVET Revision'))</title>
-    <meta name="description" content="@yield('description', 'Access comprehensive TVET past exam questions, study materials, and prepare effectively for your KNEC exams.')">
-    <meta name="keywords" content="@yield('keywords', 'TVET, KNEC, past papers, exam revision, Kenya education, diploma, certificate, technical education')">
-    <meta name="author" content="TVET Revision">
+    <title>@yield('title', $defaultTitle)</title>
+    <meta name="description" content="@yield('description', $defaultDescription)">
+    <meta name="keywords" content="@yield('keywords', $defaultKeywords)">
+    <meta name="author" content="{{ $siteName }}">
     <meta name="robots" content="@yield('robots', 'index, follow')">
 
     <!-- Canonical URL -->
     <link rel="canonical" href="@yield('canonical', url()->current())">
 
+    @if($seoSettings['enable_open_graph'])
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:url" content="@yield('og_url', url()->current())">
-    <meta property="og:title" content="@yield('og_title', 'TVET Revision - KNEC Exam Preparation')">
-    <meta property="og:description" content="@yield('og_description', 'Access comprehensive TVET past exam questions, study materials, and prepare effectively for your KNEC exams.')">
-    <meta property="og:image" content="@yield('og_image', asset('images/og-default.png'))">
-    <meta property="og:site_name" content="TVET Revision">
+    <meta property="og:title" content="@yield('og_title', $defaultTitle)">
+    <meta property="og:description" content="@yield('og_description', $defaultDescription)">
+    <meta property="og:image" content="@yield('og_image', $defaultOgImage)">
+    <meta property="og:site_name" content="{{ $siteName }}">
     <meta property="og:locale" content="en_KE">
+    @endif
 
+    @if($seoSettings['enable_twitter_cards'])
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="@yield('twitter_url', url()->current())">
-    <meta name="twitter:title" content="@yield('twitter_title', 'TVET Revision - KNEC Exam Preparation')">
-    <meta name="twitter:description" content="@yield('twitter_description', 'Access comprehensive TVET past exam questions, study materials, and prepare effectively for your KNEC exams.')">
-    <meta name="twitter:image" content="@yield('twitter_image', asset('images/og-default.png'))">
+    <meta name="twitter:title" content="@yield('twitter_title', $defaultTitle)">
+    <meta name="twitter:description" content="@yield('twitter_description', $defaultDescription)">
+    <meta name="twitter:image" content="@yield('twitter_image', $defaultOgImage)">
+    @endif
+
+    <!-- Google Search Console Verification -->
+    @if($seoSettings['google_search_console'])
+    <meta name="google-site-verification" content="{{ $seoSettings['google_search_console'] }}">
+    @endif
+
+    <!-- Google Analytics -->
+    @if($seoSettings['google_analytics_id'])
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $seoSettings['google_analytics_id'] }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ $seoSettings['google_analytics_id'] }}');
+    </script>
+    @endif
+
+    <!-- Google Tag Manager -->
+    @if($seoSettings['google_tag_manager'])
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','{{ $seoSettings['google_tag_manager'] }}');</script>
+    @endif
+
+    <!-- Custom Head Code -->
+    @if($seoSettings['custom_head_code'])
+    {!! $seoSettings['custom_head_code'] !!}
+    @endif
 
     <!-- Favicon -->
     @php
@@ -52,7 +94,7 @@
     <meta name="theme-color" content="#0d6efd">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="TVET Revision">
+    <meta name="apple-mobile-web-app-title" content="{{ $siteName }}">
     @endif
 
     <!-- Fonts -->
@@ -73,9 +115,8 @@
 
     <style>
         :root {
-            --primary-color: #0d6efd;
-            --primary-dark: #0b5ed7;
-            /* Override Bootstrap's default font family */
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
             --bs-body-font-family: 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --bs-font-sans-serif: 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -89,7 +130,6 @@
             text-decoration: none;
         }
 
-        /* Text Logo Styling */
         .text-logo {
             text-decoration: none;
         }
@@ -125,316 +165,7 @@
             color: var(--primary-color) !important;
         }
 
-        /* Hero Gradient */
-        .hero-gradient {
-            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 50%, #084298 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-gradient::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-
-        /* Cards */
-        .hover-lift {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .hover-lift:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        /* Feature Icons */
-        .feature-icon {
-            width: 64px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            font-size: 1.5rem;
-        }
-
-        /* Stats */
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-
-        /* Buttons */
-        .btn {
-            font-weight: 500;
-            padding: 0.625rem 1.25rem;
-            border-radius: 8px;
-        }
-
-        /* Footer links */
-        footer a:hover {
-            color: #fff !important;
-        }
-
-        /* Mobile Responsive Styles */
-        @media (max-width: 991.98px) {
-            /* Tablet adjustments */
-            .display-5 {
-                font-size: 2rem;
-            }
-
-            .lead {
-                font-size: 1rem;
-            }
-
-            .btn-lg {
-                padding: 0.5rem 1rem;
-                font-size: 0.95rem;
-            }
-        }
-
-        @media (max-width: 767.98px) {
-            /* Mobile adjustments */
-            .display-5 {
-                font-size: 1.5rem;
-            }
-
-            .display-4 {
-                font-size: 1.75rem;
-            }
-
-            .display-3 {
-                font-size: 2rem;
-            }
-
-            .display-1 {
-                font-size: 2.5rem;
-            }
-
-            .lead {
-                font-size: 0.9rem;
-                line-height: 1.5;
-            }
-
-            h2.fw-bold {
-                font-size: 1.35rem;
-            }
-
-            h4.fw-bold {
-                font-size: 1.1rem;
-            }
-
-            h5.fw-bold, h5.card-title {
-                font-size: 0.95rem;
-            }
-
-            h6 {
-                font-size: 0.875rem;
-            }
-
-            .stat-number {
-                font-size: 1.75rem;
-            }
-
-            .btn-lg {
-                padding: 0.5rem 1rem;
-                font-size: 0.875rem;
-            }
-
-            .btn {
-                padding: 0.45rem 0.75rem;
-                font-size: 0.8rem;
-            }
-
-            /* Hero section adjustments */
-            .hero-gradient .container.py-5 {
-                padding-top: 1.5rem !important;
-                padding-bottom: 1.5rem !important;
-            }
-
-            /* Cards padding */
-            .card-body {
-                padding: 0.875rem;
-            }
-
-            .card-body.p-4 {
-                padding: 1rem !important;
-            }
-
-            /* Feature icons smaller on mobile */
-            .feature-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 1.25rem;
-            }
-
-            /* Container padding */
-            .container {
-                padding-left: 0.875rem;
-                padding-right: 0.875rem;
-            }
-
-            /* Section padding */
-            section.py-5 {
-                padding-top: 1.75rem !important;
-                padding-bottom: 1.75rem !important;
-            }
-
-            .py-4 {
-                padding-top: 0.75rem !important;
-                padding-bottom: 0.75rem !important;
-            }
-
-            /* Gap adjustments */
-            .gap-4 {
-                gap: 0.875rem !important;
-            }
-
-            .gap-3 {
-                gap: 0.625rem !important;
-            }
-
-            /* Margin adjustments */
-            .mb-5 {
-                margin-bottom: 1.5rem !important;
-            }
-
-            .mb-4 {
-                margin-bottom: 0.875rem !important;
-            }
-
-            .mb-3 {
-                margin-bottom: 0.625rem !important;
-            }
-
-            /* Form controls */
-            .form-control, .form-select {
-                font-size: 0.875rem;
-                padding: 0.45rem 0.625rem;
-            }
-
-            /* Badge sizing */
-            .badge {
-                font-size: 0.65rem;
-                padding: 0.3em 0.5em;
-            }
-
-            /* Small text */
-            .small, small {
-                font-size: 0.75rem;
-            }
-
-            /* Breadcrumb */
-            .breadcrumb {
-                font-size: 0.75rem;
-            }
-
-            /* Tables */
-            .table {
-                font-size: 0.8rem;
-            }
-
-            /* Stats on hero */
-            .fs-3 {
-                font-size: 1.15rem !important;
-            }
-
-            .fs-5 {
-                font-size: 0.95rem !important;
-            }
-
-            /* Navbar brand */
-            .navbar-brand {
-                font-size: 1.1rem;
-            }
-
-            /* Card footer */
-            .card-footer {
-                padding: 0.625rem 0.875rem;
-            }
-
-            /* Input group */
-            .input-group-text {
-                padding: 0.45rem 0.625rem;
-                font-size: 0.875rem;
-            }
-
-            /* Row gutters */
-            .row.g-4 {
-                --bs-gutter-x: 0.75rem;
-                --bs-gutter-y: 0.75rem;
-            }
-
-            .row.g-3 {
-                --bs-gutter-x: 0.625rem;
-                --bs-gutter-y: 0.625rem;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            /* Extra small devices */
-            .display-5 {
-                font-size: 1.35rem;
-            }
-
-            .lead {
-                font-size: 0.85rem;
-            }
-
-            h2.fw-bold {
-                font-size: 1.2rem;
-            }
-
-            h5.fw-bold, h5.card-title {
-                font-size: 0.9rem;
-            }
-
-            .btn-lg {
-                padding: 0.45rem 0.875rem;
-                font-size: 0.8rem;
-            }
-
-            /* Full width buttons on mobile for CTA */
-            .hero-gradient .btn-lg {
-                width: 100%;
-                margin-bottom: 0.5rem;
-            }
-
-            .d-flex.flex-wrap.gap-3 > .btn-lg:not(:last-child) {
-                margin-bottom: 0.5rem;
-            }
-
-            /* Padding adjustments */
-            .px-5 {
-                padding-left: 1.25rem !important;
-                padding-right: 1.25rem !important;
-            }
-
-            .px-4 {
-                padding-left: 0.875rem !important;
-                padding-right: 0.875rem !important;
-            }
-
-            /* Card image heights */
-            .card-img-top {
-                height: 140px !important;
-            }
-
-            /* Step numbers smaller */
-            .step-number {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
-        }
-
-        /* Dark Mode Styles */
+        /* Dark Mode */
         [data-bs-theme="dark"] {
             --bs-body-bg: #1a1a2e;
             --bs-body-color: #e4e4e7;

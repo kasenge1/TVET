@@ -161,6 +161,13 @@
                         <i class="bi bi-palette me-2" style="font-size: 0.8rem;"></i> Branding
                     </a>
                     @endcan
+                    @can('manage settings')
+                    <a href="{{ route('admin.settings.seo') }}"
+                       class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.seo') ? 'active' : '' }}"
+                       style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+                        <i class="bi bi-search me-2" style="font-size: 0.8rem;"></i> SEO
+                    </a>
+                    @endcan
                     @can('manage packages')
                     <a href="{{ route('admin.settings.packages.index') }}"
                        class="sidebar-item sidebar-subitem text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.settings.packages.*') ? 'active' : '' }}"

@@ -53,70 +53,57 @@ if ($post->category) {
 @endpush
 
 @section('content')
-<!-- Hero Section -->
-<section class="hero-gradient text-white py-4">
-    <div class="container position-relative">
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-white opacity-75">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('blog.index') }}" class="text-white opacity-75">Blog</a></li>
+<!-- Breadcrumb -->
+<section class="fe-page-hero text-white" style="padding: 1.5rem 0;">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb fe-breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('blog.index') }}">Blog</a></li>
                 @if($post->category)
-                    <li class="breadcrumb-item"><a href="{{ route('blog.category', $post->category->slug) }}" class="text-white opacity-75">{{ $post->category->name }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('blog.category', $post->category->slug) }}">{{ $post->category->name }}</a></li>
                 @endif
-                <li class="breadcrumb-item active text-white" aria-current="page">{{ Str::limit($post->title, 30) }}</li>
+                <li class="breadcrumb-item active">{{ Str::limit($post->title, 30) }}</li>
             </ol>
         </nav>
     </div>
 </section>
 
 <!-- Article Content -->
-<section class="py-5">
+<section class="fe-section">
     <div class="container">
-        <div class="row g-5">
+        <div class="row g-4 g-lg-5">
             <!-- Main Content -->
             <div class="col-lg-8">
-                <article class="card border-0 shadow-sm">
+                <article class="fe-sidebar-card" style="padding: 0; overflow: hidden;">
                     @if($post->featured_image)
-                        <img src="{{ asset('storage/' . $post->featured_image) }}"
-                             class="card-img-top"
-                             alt="{{ $post->title }}"
-                             style="max-height: 450px; object-fit: cover;">
+                        <img src="{{ asset('storage/' . $post->featured_image) }}" class="w-100" alt="{{ $post->title }}" style="max-height: 400px; object-fit: cover;">
                     @endif
 
-                    <div class="card-body p-4 p-md-5">
+                    <div style="padding: 2rem;">
                         <!-- Category & Meta -->
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             @if($post->category)
-                                <a href="{{ route('blog.category', $post->category->slug) }}"
-                                   class="badge bg-primary text-decoration-none">{{ $post->category->name }}</a>
+                                <span class="badge rounded-pill" style="background: var(--fe-primary-light); color: var(--fe-primary); font-size: 0.7rem;">{{ $post->category->name }}</span>
                             @endif
                             @if($post->is_featured)
-                                <span class="badge bg-warning text-dark"><i class="bi bi-star-fill me-1"></i>Featured</span>
+                                <span class="badge rounded-pill" style="background: #fffbeb; color: #d97706; font-size: 0.7rem;"><i class="bi bi-star-fill me-1"></i>Featured</span>
                             @endif
                         </div>
 
                         <!-- Title -->
-                        <h1 class="fw-bold mb-3">{{ $post->title }}</h1>
+                        <h1 class="fw-bold mb-3" style="font-size: 1.75rem; letter-spacing: -0.02em;">{{ $post->title }}</h1>
 
                         <!-- Post Meta -->
-                        <div class="d-flex flex-wrap align-items-center text-muted mb-4 pb-4 border-bottom gap-3">
-                            <div>
-                                <i class="bi bi-calendar me-1"></i>
-                                {{ $post->published_at->format('F d, Y') }}
-                            </div>
-                            <div>
-                                <i class="bi bi-clock me-1"></i>
-                                {{ $post->reading_time }} min read
-                            </div>
-                            <div>
-                                <i class="bi bi-eye me-1"></i>
-                                {{ number_format($post->views_count) }} views
-                            </div>
+                        <div class="d-flex flex-wrap align-items-center mb-4 pb-4 gap-3" style="color: var(--fe-text-muted); font-size: 0.85rem; border-bottom: 1px solid var(--fe-border);">
+                            <span><i class="bi bi-calendar me-1"></i>{{ $post->published_at->format('F d, Y') }}</span>
+                            <span><i class="bi bi-clock me-1"></i>{{ $post->reading_time }} min read</span>
+                            <span><i class="bi bi-eye me-1"></i>{{ number_format($post->views_count) }} views</span>
                         </div>
 
                         <!-- Excerpt -->
                         @if($post->excerpt)
-                            <div class="lead text-muted mb-4">
+                            <div style="font-size: 1.05rem; color: var(--fe-text-secondary); line-height: 1.8; margin-bottom: 1.5rem; font-style: italic;">
                                 {{ $post->excerpt }}
                             </div>
                         @endif
@@ -127,33 +114,13 @@ if ($post->category) {
                         </div>
 
                         <!-- Share Buttons -->
-                        <div class="border-top pt-4 mt-4">
-                            <h6 class="fw-bold mb-3">Share this article</h6>
-                            <div class="d-flex gap-2">
-                                <a href="https://twitter.com/intent/tweet?url={{ urlencode(route('blog.show', $post->slug)) }}&text={{ urlencode($post->title) }}"
-                                   class="btn btn-outline-primary btn-sm"
-                                   target="_blank"
-                                   rel="noopener">
-                                    <i class="bi bi-twitter-x me-1"></i>Twitter
-                                </a>
-                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('blog.show', $post->slug)) }}"
-                                   class="btn btn-outline-primary btn-sm"
-                                   target="_blank"
-                                   rel="noopener">
-                                    <i class="bi bi-facebook me-1"></i>Facebook
-                                </a>
-                                <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ urlencode(route('blog.show', $post->slug)) }}&title={{ urlencode($post->title) }}"
-                                   class="btn btn-outline-primary btn-sm"
-                                   target="_blank"
-                                   rel="noopener">
-                                    <i class="bi bi-linkedin me-1"></i>LinkedIn
-                                </a>
-                                <a href="https://wa.me/?text={{ urlencode($post->title . ' ' . route('blog.show', $post->slug)) }}"
-                                   class="btn btn-outline-success btn-sm"
-                                   target="_blank"
-                                   rel="noopener">
-                                    <i class="bi bi-whatsapp me-1"></i>WhatsApp
-                                </a>
+                        <div style="border-top: 1px solid var(--fe-border); padding-top: 1.5rem; margin-top: 2rem;">
+                            <h6 class="fw-bold mb-3" style="font-size: 0.9rem;">Share this article</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="https://twitter.com/intent/tweet?url={{ urlencode(route('blog.show', $post->slug)) }}&text={{ urlencode($post->title) }}" class="fe-social-icon" target="_blank" rel="noopener"><i class="bi bi-twitter-x"></i></a>
+                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('blog.show', $post->slug)) }}" class="fe-social-icon" target="_blank" rel="noopener"><i class="bi bi-facebook"></i></a>
+                                <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ urlencode(route('blog.show', $post->slug)) }}&title={{ urlencode($post->title) }}" class="fe-social-icon" target="_blank" rel="noopener"><i class="bi bi-linkedin"></i></a>
+                                <a href="https://wa.me/?text={{ urlencode($post->title . ' ' . route('blog.show', $post->slug)) }}" class="fe-social-icon" target="_blank" rel="noopener" style="border-color: #25d366; color: #25d366;"><i class="bi bi-whatsapp"></i></a>
                             </div>
                         </div>
                     </div>
@@ -162,28 +129,23 @@ if ($post->category) {
                 <!-- Related Posts -->
                 @if($relatedPosts->count() > 0)
                     <div class="mt-5">
-                        <h4 class="fw-bold mb-4">Related Articles</h4>
+                        <h4 class="fw-bold mb-4" style="font-size: 1.2rem;">Related Articles</h4>
                         <div class="row g-4">
                             @foreach($relatedPosts as $related)
                                 <div class="col-md-4">
-                                    <div class="card h-100 border-0 shadow-sm hover-lift">
-                                        @if($related->featured_image)
-                                            <img src="{{ asset('storage/' . $related->featured_image) }}"
-                                                 class="card-img-top"
-                                                 alt="{{ $related->title }}"
-                                                 style="height: 140px; object-fit: cover;">
-                                        @else
-                                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 140px;">
-                                                <i class="bi bi-file-earmark-text text-muted display-5"></i>
-                                            </div>
-                                        @endif
-                                        <div class="card-body">
-                                            <h6 class="card-title fw-bold mb-2">
-                                                <a href="{{ route('blog.show', $related->slug) }}" class="text-decoration-none text-dark stretched-link">
-                                                    {{ Str::limit($related->title, 50) }}
-                                                </a>
+                                    <div class="fe-card">
+                                        <div class="fe-card-img">
+                                            @if($related->featured_image)
+                                                <img src="{{ asset('storage/' . $related->featured_image) }}" alt="{{ $related->title }}">
+                                            @else
+                                                <div class="fe-card-img-placeholder"><i class="bi bi-file-earmark-text"></i></div>
+                                            @endif
+                                        </div>
+                                        <div class="fe-card-body">
+                                            <h6 class="fe-card-title">
+                                                <a href="{{ route('blog.show', $related->slug) }}" class="text-decoration-none" style="color: var(--fe-text);">{{ Str::limit($related->title, 50) }}</a>
                                             </h6>
-                                            <small class="text-muted">{{ $related->published_at->format('M d, Y') }}</small>
+                                            <small style="color: var(--fe-text-muted); font-size: 0.75rem;">{{ $related->published_at->format('M d, Y') }}</small>
                                         </div>
                                     </div>
                                 </div>
@@ -197,75 +159,62 @@ if ($post->category) {
             <div class="col-lg-4">
                 <!-- Popular Posts -->
                 @if($popularPosts->count() > 0)
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <h5 class="fw-bold mb-3"><i class="bi bi-fire text-danger me-2"></i>Popular Posts</h5>
-                        <div class="d-flex flex-column gap-3">
-                            @foreach($popularPosts as $popular)
-                            <a href="{{ route('blog.show', $popular->slug) }}" class="text-decoration-none">
-                                <div class="d-flex gap-3 align-items-start">
-                                    @if($popular->featured_image)
-                                        <img src="{{ asset('storage/' . $popular->featured_image) }}"
-                                             class="rounded flex-shrink-0"
-                                             width="60"
-                                             height="50"
-                                             alt="{{ $popular->title }}"
-                                             style="object-fit: cover;">
-                                    @else
-                                        <div class="bg-light rounded d-flex align-items-center justify-content-center flex-shrink-0"
-                                             style="width: 60px; height: 50px;">
-                                            <i class="bi bi-file-text text-muted"></i>
-                                        </div>
-                                    @endif
-                                    <div style="min-width: 0;">
-                                        <h6 class="mb-1 text-dark fw-medium" style="line-height: 1.3;">{{ Str::limit($popular->title, 45) }}</h6>
-                                        <small class="text-muted"><i class="bi bi-eye me-1"></i>{{ number_format($popular->views_count) }} views</small>
+                <div class="fe-blog-sidebar-card">
+                    <h5 class="fe-blog-sidebar-title"><i class="bi bi-fire" style="color: var(--fe-danger);"></i> Popular Posts</h5>
+                    <div class="d-flex flex-column gap-3">
+                        @foreach($popularPosts as $popular)
+                        <a href="{{ route('blog.show', $popular->slug) }}" class="text-decoration-none">
+                            <div class="d-flex gap-3 align-items-start">
+                                @if($popular->featured_image)
+                                    <img src="{{ asset('storage/' . $popular->featured_image) }}" class="flex-shrink-0" width="56" height="44" alt="{{ $popular->title }}" style="object-fit: cover; border-radius: 6px;">
+                                @else
+                                    <div class="flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 56px; height: 44px; background: var(--fe-bg); border-radius: 6px;">
+                                        <i class="bi bi-file-text" style="color: var(--fe-text-muted);"></i>
                                     </div>
+                                @endif
+                                <div style="min-width: 0;">
+                                    <h6 class="mb-1 fw-semibold" style="line-height: 1.3; font-size: 0.85rem; color: var(--fe-text);">{{ Str::limit($popular->title, 45) }}</h6>
+                                    <small style="color: var(--fe-text-muted); font-size: 0.7rem;"><i class="bi bi-eye me-1"></i>{{ number_format($popular->views_count) }} views</small>
                                 </div>
-                            </a>
-                            @endforeach
-                        </div>
+                            </div>
+                        </a>
+                        @endforeach
                     </div>
                 </div>
                 @endif
 
                 <!-- Categories -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <h5 class="fw-bold mb-3"><i class="bi bi-folder me-2"></i>Categories</h5>
-                        <div class="list-group list-group-flush">
-                            @foreach($categories as $category)
-                                <a href="{{ route('blog.category', $category->slug) }}"
-                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ $post->category && $post->category->id === $category->id ? 'active' : '' }}">
-                                    {{ $category->name }}
-                                    <span class="badge bg-secondary rounded-pill">{{ $category->published_posts_count }}</span>
-                                </a>
-                            @endforeach
-                        </div>
+                <div class="fe-blog-sidebar-card">
+                    <h5 class="fe-blog-sidebar-title"><i class="bi bi-folder"></i> Categories</h5>
+                    <div class="d-flex flex-column gap-1">
+                        @foreach($categories as $category)
+                            <a href="{{ route('blog.category', $category->slug) }}" class="d-flex justify-content-between align-items-center p-2 rounded text-decoration-none" style="background: {{ $post->category && $post->category->id === $category->id ? 'var(--fe-primary-light)' : 'transparent' }}; color: {{ $post->category && $post->category->id === $category->id ? 'var(--fe-primary)' : 'var(--fe-text-secondary)' }}; font-size: 0.9rem; font-weight: {{ $post->category && $post->category->id === $category->id ? '600' : '400' }};">
+                                {{ $category->name }}
+                                <span class="badge rounded-pill" style="background: {{ $post->category && $post->category->id === $category->id ? 'var(--fe-primary)' : 'var(--fe-border)' }}; color: {{ $post->category && $post->category->id === $category->id ? '#fff' : 'var(--fe-text-secondary)' }}; font-size: 0.7rem;">{{ $category->published_posts_count }}</span>
+                            </a>
+                        @endforeach
                     </div>
                 </div>
 
                 <!-- CTA -->
-                <div class="card border-0 bg-primary text-white">
-                    <div class="card-body text-center py-4">
-                        <i class="bi bi-mortarboard display-4 mb-3"></i>
-                        <h5 class="fw-bold mb-2">Ready to Study?</h5>
-                        <p class="opacity-90 small mb-3">Access thousands of TVET past exam questions and ace your exams.</p>
-                        @auth
-                            <a href="{{ route('learn.index') }}" class="btn btn-light w-100">
-                                <i class="bi bi-arrow-right me-2"></i>Start Learning
-                            </a>
-                        @else
-                            <a href="{{ route('register') }}" class="btn btn-light w-100">
-                                <i class="bi bi-person-plus me-2"></i>Get Started Free
-                            </a>
-                        @endauth
-                    </div>
+                <div class="fe-cta-card">
+                    <i class="bi bi-mortarboard display-4 mb-3 d-block" style="opacity: 0.9;"></i>
+                    <h5 class="fw-bold mb-2">Ready to Study?</h5>
+                    <p style="font-size: 0.85rem; color: rgba(255,255,255,0.8); margin-bottom: 1rem;">Access thousands of TVET past exam questions and ace your exams.</p>
+                    @auth
+                        <a href="{{ route('learn.index') }}" class="fe-btn fe-btn-white w-100">
+                            <i class="bi bi-arrow-right me-2"></i>Start Learning
+                        </a>
+                    @else
+                        <a href="{{ route('register') }}" class="fe-btn fe-btn-white w-100">
+                            <i class="bi bi-person-plus me-2"></i>Get Started Free
+                        </a>
+                    @endauth
                 </div>
 
                 <!-- Back to Blog -->
-                <div class="mt-4">
-                    <a href="{{ route('blog.index') }}" class="btn btn-outline-secondary w-100">
+                <div class="mt-3">
+                    <a href="{{ route('blog.index') }}" class="fe-btn w-100" style="background: var(--fe-bg); color: var(--fe-text-secondary); border: 1px solid var(--fe-border);">
                         <i class="bi bi-arrow-left me-2"></i>Back to Blog
                     </a>
                 </div>
@@ -280,12 +229,13 @@ if ($post->category) {
     .blog-content {
         font-size: 1.05rem;
         line-height: 1.8;
+        color: var(--fe-text-secondary);
     }
 
     .blog-content img {
         max-width: 100%;
         height: auto;
-        border-radius: 8px;
+        border-radius: var(--fe-radius);
         margin: 1.5rem 0;
     }
 
@@ -294,6 +244,7 @@ if ($post->category) {
         font-weight: 700;
         margin-top: 2rem;
         margin-bottom: 1rem;
+        color: var(--fe-text);
     }
 
     .blog-content h3 {
@@ -301,6 +252,7 @@ if ($post->category) {
         font-weight: 600;
         margin-top: 1.5rem;
         margin-bottom: 0.75rem;
+        color: var(--fe-text);
     }
 
     .blog-content h4 {
@@ -308,6 +260,7 @@ if ($post->category) {
         font-weight: 600;
         margin-top: 1.25rem;
         margin-bottom: 0.5rem;
+        color: var(--fe-text);
     }
 
     .blog-content p {
@@ -324,33 +277,33 @@ if ($post->category) {
     }
 
     .blog-content blockquote {
-        border-left: 4px solid #0d6efd;
+        border-left: 4px solid var(--fe-primary);
         padding: 1rem 1.5rem;
         margin: 1.5rem 0;
-        background-color: #f8f9fa;
-        border-radius: 0 8px 8px 0;
+        background: var(--fe-bg);
+        border-radius: 0 var(--fe-radius-sm) var(--fe-radius-sm) 0;
         font-style: italic;
-        color: #495057;
+        color: var(--fe-text-secondary);
     }
 
     .blog-content pre {
-        background-color: #1e293b;
+        background: #1e293b;
         color: #e2e8f0;
         padding: 1rem 1.5rem;
-        border-radius: 8px;
+        border-radius: var(--fe-radius-sm);
         overflow-x: auto;
         margin: 1.5rem 0;
     }
 
     .blog-content code {
-        background-color: #f1f5f9;
+        background: var(--fe-bg);
         padding: 0.2rem 0.4rem;
         border-radius: 4px;
         font-size: 0.9em;
     }
 
     .blog-content pre code {
-        background-color: transparent;
+        background: transparent;
         padding: 0;
     }
 
@@ -363,17 +316,12 @@ if ($post->category) {
     .blog-content table th,
     .blog-content table td {
         padding: 0.75rem;
-        border: 1px solid #dee2e6;
+        border: 1px solid var(--fe-border);
     }
 
     .blog-content table th {
-        background-color: #f8f9fa;
+        background: var(--fe-bg);
         font-weight: 600;
-    }
-
-    .list-group-item.active {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
     }
 
     @media (max-width: 767.98px) {
@@ -387,10 +335,6 @@ if ($post->category) {
 
         .blog-content h3 {
             font-size: 1.1rem;
-        }
-
-        h1.fw-bold {
-            font-size: 1.5rem;
         }
     }
 </style>
