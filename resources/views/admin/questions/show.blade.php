@@ -401,32 +401,42 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // Delete sub-question function
 function deleteSubQuestion(subQuestionId, subQuestionLetter) {
-    if (!confirm(`Are you sure you want to delete sub-question "${subQuestionLetter}"?\n\nThis action cannot be undone.`)) {
-        return;
-    }
+    Swal.fire({
+        title: 'Delete Sub-question?',
+        html: `You are about to delete sub-question <strong>"${subQuestionLetter}"</strong>.<br><br>This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash me-2"></i>Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/questions/${subQuestionId}`;
+            form.style.display = 'none';
 
-    // Create form and submit
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/admin/questions/${subQuestionId}`;
-    form.style.display = 'none';
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
 
-    // Add CSRF token
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = '_token';
-    csrfInput.value = '{{ csrf_token() }}';
-    form.appendChild(csrfInput);
+            // Add DELETE method
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
 
-    // Add DELETE method
-    const methodInput = document.createElement('input');
-    methodInput.type = 'hidden';
-    methodInput.name = '_method';
-    methodInput.value = 'DELETE';
-    form.appendChild(methodInput);
-
-    document.body.appendChild(form);
-    form.submit();
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
 }
 </script>
 @endpush
