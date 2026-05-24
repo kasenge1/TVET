@@ -768,24 +768,52 @@ class QuestionController extends Controller
     protected function generateGlobalQuestionNumber($parentQuestionId = null): string
     {
         if ($parentQuestionId) {
-            // Sub-question: get parent's number and append next letter
+            // Sub-question: get parent's number and append next available letter
             $parentQuestion = Question::find($parentQuestionId);
             if (!$parentQuestion) {
                 return '1a'; // Fallback
             }
 
-            // Count existing sub-questions for this parent
-            $subCount = Question::where('parent_question_id', $parentQuestionId)->count();
-            // Convert count to letter: 0=a, 1=b, 2=c, etc.
-            $letter = chr(97 + $subCount); // 97 is ASCII for 'a'
+            // Get existing sub-question letters for this parent
+            $existingLetters = Question::where('parent_question_id', $parentQuestionId)
+                ->pluck('question_number')
+                ->map(function ($num) use ($parentQuestion) {
+                    // Extract the letter suffix after the parent's number
+                    return str_replace($parentQuestion->question_number, '', $num);
+                })
+                ->filter()
+                ->values();
+
+            // Find the first available letter (a, b, c, ...)
+            $letter = 'a';
+            while ($existingLetters->contains($letter)) {
+                $letter = chr(ord($letter) + 1);
+            }
 
             return $parentQuestion->question_number . $letter;
         } else {
-            // Main question: get next global number based on MAX of all questions
-            $maxNumber = Question::whereNull('parent_question_id')
-                ->max(\DB::raw('CAST(question_number AS UNSIGNED)'));
+            // Main question: find the lowest available gap
+            $existingNumbers = Question::whereNull('parent_question_id')
+                ->pluck('question_number')
+                ->map(function ($num) {
+                    return (int) $num;
+                })
+                ->filter()
+                ->sort()
+                ->values();
 
-            return (string) (($maxNumber ?? 0) + 1);
+            // Find first gap: check 1, 2, 3, ... until we find one that's missing
+            $next = 1;
+            foreach ($existingNumbers as $num) {
+                if ($num === $next) {
+                    $next++;
+                } elseif ($num > $next) {
+                    // Found a gap
+                    break;
+                }
+            }
+
+            return (string) $next;
         }
     }
 
@@ -800,13 +828,26 @@ class QuestionController extends Controller
             return 1;
         }
 
-        // Find the highest existing period_question_number for this unit + exam period
-        $maxNumber = Question::where('unit_id', $unitId)
+        // Get existing period numbers for this unit + exam period
+        $existingNumbers = Question::where('unit_id', $unitId)
             ->where('exam_period_id', $examPeriodId)
             ->whereNull('parent_question_id')
-            ->max('period_question_number');
+            ->pluck('period_question_number')
+            ->filter()
+            ->sort()
+            ->values();
 
-        return ($maxNumber ?? 0) + 1;
+        // Find first gap: check 1, 2, 3, ... until we find one that's missing
+        $next = 1;
+        foreach ($existingNumbers as $num) {
+            if ($num == $next) {
+                $next++;
+            } elseif ($num > $next) {
+                break;
+            }
+        }
+
+        return $next;
     }
 
     /**
