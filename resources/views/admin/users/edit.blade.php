@@ -43,7 +43,14 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label fw-medium">Change Password</label>
+                    <label for="phone_input" class="form-label fw-medium">Phone Number</label>
+                    <input type="tel" id="phone_input" class="form-control @error('phone_number') is-invalid @enderror" placeholder="712 345 678">
+                    <input type="hidden" name="phone_number" id="phone_number" value="{{ old('phone_number', $user->phone_number) }}">
+                    @error('phone_number')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">Used to contact the user directly</small>
+                </div>
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>Leave blank to keep current password
                     </div>
@@ -273,23 +280,44 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-document.querySelectorAll('.password-toggle').forEach(button => {
-    button.addEventListener('click', function() {
-        const targetId = this.getAttribute('data-target');
-        const input = document.getElementById(targetId);
-        const icon = this.querySelector('i');
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
+@endpush
 
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.classList.remove('bi-eye');
-            icon.classList.add('bi-eye-slash');
-        } else {
-            input.type = 'password';
-            icon.classList.remove('bi-eye-slash');
-            icon.classList.add('bi-eye');
-        }
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Phone input ---
+    const phoneInput = document.getElementById('phone_input');
+    const phoneHidden = document.getElementById('phone_number');
+    const iti = window.intlTelInput(phoneInput, {
+        initialCountry: 'ke',
+        separateDialCode: true,
+        loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'),
+    });
+    if (phoneHidden.value) iti.setNumber(phoneHidden.value);
+    phoneInput.closest('form').addEventListener('submit', function () {
+        phoneHidden.value = iti.getNumber();
+    });
+
+    // --- Password toggles ---
+    document.querySelectorAll('.password-toggle').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const icon = this.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
     });
 });
 </script>

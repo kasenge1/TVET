@@ -29,6 +29,11 @@
                 @endif
                 <h4 class="mb-1">{{ $user->name }}</h4>
                 <p class="text-muted mb-2">{{ $user->email }}</p>
+                @if($user->phone_number)
+                    <p class="text-muted mb-2">
+                        <i class="bi bi-telephone me-1"></i>{{ $user->phone_number }}
+                    </p>
+                @endif
 
                 <div class="d-flex gap-2 justify-content-center mb-3">
                     @foreach($user->roles as $role)
@@ -87,6 +92,17 @@
                 <div class="fw-medium">{{ $user->created_at->format('F d, Y') }}</div>
                 <div class="text-muted small">{{ $user->created_at->diffForHumans() }}</div>
             </div>
+
+            @if($user->phone_number)
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Phone Number</div>
+                    <div class="fw-medium">
+                        <a href="tel:{{ $user->phone_number }}" class="text-decoration-none">
+                            <i class="bi bi-telephone me-1 text-success"></i>{{ $user->phone_number }}
+                        </a>
+                    </div>
+                </div>
+            @endif
 
             @if($user->subscription_expires_at)
                 <div class="mb-3">

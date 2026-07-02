@@ -390,7 +390,7 @@ class LearnController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'phone' => ['nullable', 'string', 'max:15'],
+            'phone_number' => ['nullable', 'string', 'regex:/^\+[1-9]\d{6,14}$/'],
         ]);
 
         $user->update($validated);

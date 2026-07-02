@@ -80,17 +80,13 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="phone" class="form-label fw-medium">Phone Number</label>
-                            <input type="tel"
-                                   class="form-control @error('phone') is-invalid @enderror"
-                                   id="phone"
-                                   name="phone"
-                                   value="{{ old('phone', $user->phone) }}"
-                                   placeholder="e.g., 0712345678">
-                            @error('phone')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <label for="phone_input" class="form-label fw-medium">Phone Number</label>
+                            <input type="tel" id="phone_input" class="form-control @error('phone_number') is-invalid @enderror" placeholder="712 345 678">
+                            <input type="hidden" name="phone_number" id="phone_number" value="{{ old('phone_number', $user->phone_number) }}">
+                            @error('phone_number')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
-                            <div class="form-text">Used for M-Pesa payments</div>
+                            <div class="form-text">Used for M-Pesa payments and to contact you</div>
                         </div>
 
                         <button type="submit" class="btn btn-primary">
@@ -312,7 +308,12 @@
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
 <script>
 function togglePasswordVisibility(inputId, button) {
     const input = document.getElementById(inputId);
@@ -328,5 +329,26 @@ function togglePasswordVisibility(inputId, button) {
         icon.classList.add('bi-eye');
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const phoneInput = document.getElementById('phone_input');
+    const phoneHidden = document.getElementById('phone_number');
+
+    const iti = window.intlTelInput(phoneInput, {
+        initialCountry: 'ke',
+        separateDialCode: true,
+        loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'),
+    });
+
+    // Pre-fill with existing number
+    if (phoneHidden.value) {
+        iti.setNumber(phoneHidden.value);
+    }
+
+    // On form submit write full E.164 to hidden field
+    phoneInput.closest('form').addEventListener('submit', function () {
+        phoneHidden.value = iti.getNumber();
+    });
+});
 </script>
 @endpush

@@ -44,7 +44,15 @@
                     <small class="text-muted">User will receive login credentials at this email</small>
                 </div>
 
-                <div class="row mb-4">
+                <div class="mb-4">
+                    <label for="phone_input" class="form-label fw-medium">Phone Number</label>
+                    <input type="tel" id="phone_input" class="form-control @error('phone_number') is-invalid @enderror" placeholder="712 345 678">
+                    <input type="hidden" name="phone_number" id="phone_number" value="{{ old('phone_number') }}">
+                    @error('phone_number')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">Used to contact the user directly</small>
+                </div>
                     <div class="col-md-6">
                         <label for="password" class="form-label fw-medium">Password <span class="text-danger">*</span></label>
                         <div class="input-group">
@@ -212,9 +220,26 @@
     </div>
 </div>
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // --- Phone input ---
+    const phoneInput = document.getElementById('phone_input');
+    const phoneHidden = document.getElementById('phone_number');
+    const iti = window.intlTelInput(phoneInput, {
+        initialCountry: 'ke',
+        separateDialCode: true,
+        loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'),
+    });
+    if (phoneHidden.value) iti.setNumber(phoneHidden.value);
+    phoneInput.closest('form').addEventListener('submit', function () {
+        phoneHidden.value = iti.getNumber();
+    });
     const passwordInput = document.getElementById('password');
     const passwordConfirmInput = document.getElementById('password_confirmation');
     const togglePassword = document.getElementById('togglePassword');

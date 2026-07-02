@@ -47,6 +47,19 @@
     </div>
 
     <div class="mb-4">
+        <label for="phone_input" class="form-label">Phone Number <span class="text-danger">*</span></label>
+        <input type="tel"
+               class="form-control @error('phone_number') is-invalid @enderror"
+               id="phone_input"
+               placeholder="712 345 678">
+        {{-- Hidden field that receives the full E.164 number e.g. +254712345678 --}}
+        <input type="hidden" name="phone_number" id="phone_number" value="{{ old('phone_number') }}">
+        @error('phone_number')
+            <div class="text-danger small mt-1">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="mb-4">
         <label for="password" class="form-label">Password</label>
         <div class="input-with-icon password-field">
             <i class="bi bi-lock input-icon"></i>
@@ -136,7 +149,35 @@
 
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
 <style>
+    /* intl-tel-input overrides to match the page style */
+    .iti {
+        display: block;
+        width: 100%;
+    }
+    .iti__flag-container {
+        z-index: 10;
+    }
+    #phone_input {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        padding-left: 3.5rem;
+        background-color: #f9fafb;
+        height: 52px;
+        width: 100%;
+        font-size: 0.95rem;
+    }
+    #phone_input:focus {
+        border-color: #667eea;
+        background-color: #fff;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    .iti__selected-dial-code {
+        font-size: 0.9rem;
+    }
     .password-field {
         position: relative;
     }
@@ -224,6 +265,7 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
 <script>
 // Password toggle function
 function togglePassword(inputId, button) {
@@ -242,6 +284,27 @@ function togglePassword(inputId, button) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    // --- intl-tel-input setup ---
+    const phoneInput = document.getElementById('phone_input');
+    const phoneHidden = document.getElementById('phone_number');
+
+    const iti = window.intlTelInput(phoneInput, {
+        initialCountry: 'ke',
+        separateDialCode: true,
+        loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js'),
+    });
+
+    // Restore old value if validation failed
+    const oldVal = phoneHidden.value;
+    if (oldVal) {
+        iti.setNumber(oldVal);
+    }
+
+    // On form submit, write full E.164 number to hidden field
+    phoneInput.closest('form').addEventListener('submit', function () {
+        phoneHidden.value = iti.getNumber(); // e.g. +254712345678
+    });
     const courseSelect = document.getElementById('course_id');
     const courseInfo = document.getElementById('courseInfo');
     const infoUnits = document.getElementById('infoUnits');
