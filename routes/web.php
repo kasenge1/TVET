@@ -166,6 +166,24 @@ Route::middleware(['auth'])->group(function () {
 | Learning Routes (Frontend Revision System)
 |--------------------------------------------------------------------------
 */
+
+// Verification banner actions — auth only, no 'verified' middleware needed
+Route::middleware(['auth'])->prefix('learn')->name('learn.')->group(function () {
+    Route::post('/resend-verification', function () {
+        $user = auth()->user();
+        if ($user->hasVerifiedEmail()) {
+            return back()->with('info', 'Your email is already verified.');
+        }
+        $user->sendEmailVerificationNotification();
+        return back()->with('verification_resent', true);
+    })->name('resend-verification');
+
+    Route::post('/dismiss-verification-banner', function () {
+        session()->put('verification_banner_dismissed', true);
+        return back();
+    })->name('dismiss-verification-banner');
+});
+
 Route::middleware(['auth', 'verified'])->prefix('learn')->name('learn.')->group(function () {
     Route::get('/', [LearnController::class, 'index'])->name('index');
     Route::get('/saved', [LearnController::class, 'saved'])->name('saved');

@@ -482,6 +482,9 @@
         @endif
     @endauth
 
+    <!-- Email Verification Reminder Banner -->
+    <x-email-verification-banner />
+
     <!-- Navigation -->
     @include('partials.frontend.navbar')
 
