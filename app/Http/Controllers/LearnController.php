@@ -201,7 +201,10 @@ class LearnController extends Controller
         // Load the unit's level if it has one
         $unit->load('level');
 
-        return view('learn.unit', compact('unit', 'questions', 'savedIds', 'viewedIds', 'unitProgress', 'lastViewed', 'course', 'examPeriods', 'selectedPeriod'));
+        // Load published study notes for this unit
+        $notes = $unit->notes()->published()->ordered()->get();
+
+        return view('learn.unit', compact('unit', 'questions', 'savedIds', 'viewedIds', 'unitProgress', 'lastViewed', 'course', 'examPeriods', 'selectedPeriod', 'notes'));
     }
 
     /**

@@ -40,6 +40,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'import questions',
             'export questions',
 
+            // Note permissions
+            'view notes',
+            'create notes',
+            'edit notes',
+            'delete notes',
+
             // Level permissions
             'view levels',
             'create levels',
@@ -129,6 +135,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view courses', 'create courses', 'edit courses', 'delete courses', 'publish courses',
             'view units', 'create units', 'edit units', 'delete units',
             'view questions', 'create questions', 'edit questions', 'delete questions', 'import questions', 'export questions',
+            'view notes', 'create notes', 'edit notes', 'delete notes',
             'view levels', 'create levels', 'edit levels', 'delete levels',
             // Blog management
             'view blog', 'create blog', 'edit blog', 'delete blog', 'publish blog',
@@ -157,6 +164,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view courses', 'create courses', 'edit courses',
             'view units', 'create units', 'edit units',
             'view questions', 'create questions', 'edit questions', 'delete questions', 'import questions', 'export questions',
+            'view notes', 'create notes', 'edit notes', 'delete notes',
             'view levels',
             'view blog', 'create blog', 'edit blog', 'publish blog',
             'view categories', 'create categories', 'edit categories',
@@ -169,6 +177,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view courses',
             'view units',
             'view questions', 'create questions', 'edit questions', 'import questions',
+            'view notes', 'create notes', 'edit notes',
             'view levels',
             'view dashboard',
         ]);

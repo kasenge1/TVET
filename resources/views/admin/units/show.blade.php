@@ -56,6 +56,41 @@
         </x-card>
         @endif
 
+        <!-- Notes Summary Card -->
+        <x-card title="Study Notes" class="mt-4">
+            <div class="text-center py-4">
+                <div class="rounded-circle bg-info bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-journal-text text-info" style="font-size: 2.5rem;"></i>
+                </div>
+                <h2 class="mb-1">{{ $unit->notes->count() }}</h2>
+                <p class="text-muted mb-4">Study Notes in this Unit</p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <div class="fw-bold text-success fs-4">{{ $unit->notes->where('is_published', true)->count() }}</div>
+                            <small class="text-muted">Published</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <div class="fw-bold text-warning fs-4">{{ $unit->notes->where('is_published', false)->count() }}</div>
+                            <small class="text-muted">Drafts</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{{ route('admin.notes.index', ['unit' => $unit->id]) }}" class="btn btn-info">
+                        <i class="bi bi-eye me-2"></i>View All Notes
+                    </a>
+                    <a href="{{ route('admin.notes.create', ['unit' => $unit->id]) }}" class="btn btn-outline-info">
+                        <i class="bi bi-plus-circle me-2"></i>Add Note
+                    </a>
+                </div>
+            </div>
+        </x-card>
+
         <!-- Questions Summary Card -->
         <x-card title="Questions" class="mt-4">
             <div class="text-center py-4">
@@ -101,6 +136,13 @@
     <div class="col-xl-4">
         <x-card title="Quick Actions">
             <div class="d-grid gap-2">
+                <a href="{{ route('admin.notes.index', ['unit' => $unit->id]) }}" class="btn btn-info">
+                    <i class="bi bi-journal-text me-2"></i>View Notes ({{ $unit->notes->count() }})
+                </a>
+                <a href="{{ route('admin.notes.create', ['unit' => $unit->id]) }}" class="btn btn-outline-info">
+                    <i class="bi bi-plus-circle me-2"></i>Add Note
+                </a>
+                <hr class="my-2">
                 <a href="{{ route('admin.questions.index', ['unit' => $unit->id]) }}" class="btn btn-primary">
                     <i class="bi bi-question-circle me-2"></i>View Questions ({{ $unit->questions->count() }})
                 </a>
@@ -111,7 +153,7 @@
                 <a href="{{ route('admin.units.edit', $unit) }}" class="btn btn-outline-secondary">
                     <i class="bi bi-pencil me-2"></i>Edit Unit
                 </a>
-                <a href="{{ route('admin.courses.show', $unit->course) }}" class="btn btn-outline-info">
+                <a href="{{ route('admin.courses.show', $unit->course) }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-2"></i>Back to Course
                 </a>
             </div>

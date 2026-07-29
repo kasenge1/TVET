@@ -71,6 +71,45 @@
     <!-- Ad Banner -->
     <x-google-ad slot="header" class="mb-4" />
 
+    <!-- Study Notes Section -->
+    @if($notes->count() > 0)
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-journal-text me-2 text-info"></i>Study Notes
+                    <span class="badge bg-info ms-2">{{ $notes->count() }}</span>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="accordion" id="notesAccordion">
+                    @foreach($notes as $index => $note)
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button {{ $index > 0 ? 'collapsed' : '' }} fw-medium"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#note{{ $note->id }}"
+                                        aria-expanded="{{ $index === 0 ? 'true' : 'false' }}">
+                                    <i class="bi bi-file-earmark-text me-2 text-info"></i>
+                                    {{ $note->title }}
+                                </button>
+                            </h2>
+                            <div id="note{{ $note->id }}"
+                                 class="accordion-collapse collapse {{ $index === 0 ? 'show' : '' }}"
+                                 data-bs-parent="#notesAccordion">
+                                <div class="accordion-body pt-0">
+                                    <div class="note-content">
+                                        {!! $note->content !!}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if(isset($examPeriods) && $examPeriods->count() > 0)
         @if(!($selectedPeriod ?? false))
             <!-- Exam Period Selection - Show when no period is selected -->
@@ -312,6 +351,57 @@
         transform: translateY(-3px);
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
         border-color: var(--bs-primary) !important;
+    }
+
+    /* Notes Styles */
+    .note-content {
+        line-height: 1.7;
+        font-size: 0.95rem;
+    }
+    .note-content p {
+        margin-bottom: 1rem;
+    }
+    .note-content ul, .note-content ol {
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+    }
+    .note-content h1, .note-content h2, .note-content h3,
+    .note-content h4, .note-content h5, .note-content h6 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+    .note-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    .note-content blockquote {
+        border-left: 4px solid #667eea;
+        padding-left: 1rem;
+        margin-left: 0;
+        color: #6c757d;
+        font-style: italic;
+    }
+    .note-content pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+    }
+    .note-content .ql-formula {
+        background: #e8f4fd;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(13, 110, 253, 0.05);
+        color: #0d6efd;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,.125);
     }
 </style>
 @endpush

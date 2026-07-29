@@ -63,6 +63,13 @@
         </a>
         @endcan
 
+        @can('view notes')
+        <a href="{{ route('admin.notes.index') }}"
+           class="sidebar-item text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.notes.*') ? 'active' : '' }}">
+            <i class="bi bi-journal-text me-2"></i> Notes
+        </a>
+        @endcan
+
         @can('view blog')
         <a href="{{ route('admin.blog.posts.index') }}"
            class="sidebar-item text-white text-decoration-none d-flex align-items-center {{ request()->routeIs('admin.blog.*') ? 'active' : '' }}">

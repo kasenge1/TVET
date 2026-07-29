@@ -35,6 +35,9 @@ class Unit extends Model
             foreach ($unit->questions as $question) {
                 $question->delete();
             }
+
+            // Delete all notes when unit is deleted
+            $unit->notes()->delete();
         });
     }
 
@@ -138,5 +141,13 @@ class Unit extends Model
     public function getQuestionCountAttribute()
     {
         return $this->questions()->count();
+    }
+
+    /**
+     * Get the notes for this unit.
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class)->orderBy('order');
     }
 }

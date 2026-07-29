@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\ExamPeriodController as AdminExamPeriodController;
+use App\Http\Controllers\Admin\NoteController as AdminNoteController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -393,6 +394,27 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     Route::middleware(['permission:delete questions'])->group(function () {
         Route::delete('questions/{question}', [AdminQuestionController::class, 'destroy'])->name('questions.destroy');
+    });
+
+    // Notes Management - requires note permissions
+    // IMPORTANT: Static routes must come BEFORE parameter routes
+    Route::middleware(['permission:create notes'])->group(function () {
+        Route::get('notes/create', [AdminNoteController::class, 'create'])->name('notes.create');
+        Route::post('notes', [AdminNoteController::class, 'store'])->name('notes.store');
+        Route::get('units/{unit}/notes/create', [AdminNoteController::class, 'create'])->name('units.notes.create');
+    });
+    Route::middleware(['permission:view notes'])->group(function () {
+        Route::get('notes', [AdminNoteController::class, 'index'])->name('notes.index');
+        Route::get('notes/{note}', [AdminNoteController::class, 'show'])->name('notes.show');
+    });
+    Route::middleware(['permission:edit notes'])->group(function () {
+        Route::get('notes/{note}/edit', [AdminNoteController::class, 'edit'])->name('notes.edit');
+        Route::put('notes/{note}', [AdminNoteController::class, 'update'])->name('notes.update');
+        Route::patch('notes/{note}', [AdminNoteController::class, 'update']);
+        Route::post('notes/quill-upload-image', [AdminNoteController::class, 'uploadQuillImage'])->name('notes.quill-upload-image');
+    });
+    Route::middleware(['permission:delete notes'])->group(function () {
+        Route::delete('notes/{note}', [AdminNoteController::class, 'destroy'])->name('notes.destroy');
     });
 
     // Exam Periods Management - uses same permissions as questions
