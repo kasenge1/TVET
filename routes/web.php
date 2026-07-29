@@ -703,4 +703,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('notifications/preferences', [NotificationController::class, 'updatePreferences'])->name('notifications.preferences.update');
 });
 
+/*
+|--------------------------------------------------------------------------
+| ads.txt Route (Google AdSense)
+|--------------------------------------------------------------------------
+*/
+Route::get('/ads.txt', function () {
+    $clientId = \App\Models\SiteSetting::get('ads_client_id', '');
+
+    if (empty($clientId)) {
+        return response('', 404);
+    }
+
+    $content = "google.com, pub-{$clientId}, DIRECT, f08c47fec0942fa0";
+
+    return response($content, 200, [
+        'Content-Type' => 'text/plain',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->name('ads.txt');
+
 require __DIR__.'/auth.php';
