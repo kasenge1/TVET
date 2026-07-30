@@ -248,11 +248,12 @@
         color: #2563eb !important;
     }
     .ts-dropdown .option.active .badge {
-        background-color: rgba(255, 255, 255, 0.2) !important;
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        color: #fff !important;
     }
     .ts-dropdown .option:hover:not(.active) .badge {
-        background-color: rgba(37, 99, 235, 0.2) !important;
-        color: #2563eb !important;
+        background-color: #dbeafe !important;
+        color: #1d4ed8 !important;
     }
     .ts-control input {
         font-size: 0.95rem;
@@ -330,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return `<div class="py-1">
                     <div class="fw-semibold">${escape(data.text.split(' - ')[0])}</div>
                     <div class="mt-1">
-                        ${level ? `<span class="badge bg-secondary me-1">${escape(level)}</span>` : ''}
+                        ${level ? `<span class="badge me-1" style="background-color: #dbeafe; color: #1d4ed8; font-size: 0.7rem;">${escape(level)}</span>` : ''}
                         <small class="text-muted">${escape(units)} Units &bull; ${escape(questions)} Questions</small>
                     </div>
                 </div>`;
