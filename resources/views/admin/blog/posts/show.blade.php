@@ -194,7 +194,7 @@
     }
 
     .blog-content blockquote {
-        border-left: 4px solid #667eea;
+        border-left: 4px solid #2563eb;
         padding-left: 1rem;
         margin: 1rem 0;
         font-style: italic;

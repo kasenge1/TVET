@@ -5,7 +5,7 @@
 @section('content')
 <div class="container py-4">
     <!-- Course Header with Progress -->
-    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
         <div class="card-body text-white p-4">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
                 <div class="flex-grow-1">

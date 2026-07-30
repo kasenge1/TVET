@@ -112,7 +112,7 @@
         transition: color 0.2s;
     }
     .password-toggle:hover {
-        color: #667eea;
+        color: #2563eb;
     }
 </style>
 @endpush

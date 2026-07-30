@@ -29,7 +29,7 @@
 
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         }
 
         body {
@@ -76,7 +76,10 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background:
+                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255,255,255,0.04) 0%, transparent 70%);
         }
 
         .auth-branding-content {
@@ -381,9 +384,9 @@
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: #667eea;
+            border-color: #2563eb;
             background-color: #fff;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
 
         .form-control.is-invalid, .form-select.is-invalid {
@@ -422,12 +425,12 @@
         .btn-primary {
             background: var(--primary-gradient);
             border: none;
-            box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.4);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.5);
+            box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.5);
             background: var(--primary-gradient);
         }
 
@@ -436,8 +439,8 @@
         }
 
         .form-check-input:checked {
-            background-color: #667eea;
-            border-color: #667eea;
+            background-color: #2563eb;
+            border-color: #2563eb;
         }
 
         .auth-footer {
@@ -447,7 +450,7 @@
         }
 
         .auth-footer a {
-            color: #667eea;
+            color: #2563eb;
             font-weight: 600;
             text-decoration: none;
         }
@@ -490,11 +493,11 @@
 
         @media (max-width: 991px) {
             .back-to-home {
-                color: #667eea;
+                color: #2563eb;
                 position: static;
             }
             .back-to-home:hover {
-                color: #764ba2;
+                color: #1d4ed8;
             }
         }
 

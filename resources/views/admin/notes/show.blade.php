@@ -119,7 +119,7 @@
     margin: 1rem 0;
 }
 .note-content blockquote {
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #2563eb;
     padding-left: 1rem;
     margin-left: 0;
     color: #6c757d;

@@ -56,7 +56,7 @@
             <label class="form-check-label small" for="remember_me">Remember me</label>
         </div>
         @if (Route::has('password.request'))
-            <a href="{{ route('password.request') }}" class="small" style="color: #667eea; text-decoration: none;">Forgot password?</a>
+            <a href="{{ route('password.request') }}" class="small" style="color: #2563eb; text-decoration: none;">Forgot password?</a>
         @endif
     </div>
 
@@ -100,7 +100,7 @@
         transition: color 0.2s;
     }
     .password-toggle:hover {
-        color: #667eea;
+        color: #2563eb;
     }
 </style>
 @endpush

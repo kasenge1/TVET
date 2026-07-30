@@ -192,7 +192,7 @@
     }
 
     .mobile-bottom-nav .nav-link.active {
-        color: #667eea;
+        color: #2563eb;
     }
 
     .mobile-bottom-nav .nav-link i {

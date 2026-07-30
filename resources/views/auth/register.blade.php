@@ -119,8 +119,8 @@
         <!-- Course Info Display -->
         <div id="courseInfo" class="course-info-box mt-3" style="display: none;">
             <div class="d-flex justify-content-between align-items-center">
-                <span class="small"><i class="bi bi-journal-text me-1" style="color: #667eea;"></i><strong id="infoUnits">0</strong> Units</span>
-                <span class="small"><i class="bi bi-question-circle me-1" style="color: #667eea;"></i><strong id="infoQuestions">0</strong> Questions</span>
+                <span class="small"><i class="bi bi-journal-text me-1" style="color: #2563eb;"></i><strong id="infoUnits">0</strong> Units</span>
+                <span class="small"><i class="bi bi-question-circle me-1" style="color: #2563eb;"></i><strong id="infoQuestions">0</strong> Questions</span>
             </div>
         </div>
 
@@ -170,9 +170,9 @@
         font-size: 0.95rem;
     }
     #phone_input:focus {
-        border-color: #667eea;
+        border-color: #2563eb;
         background-color: #fff;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         outline: none;
     }
     .iti__selected-dial-code {
@@ -198,7 +198,7 @@
         transition: color 0.2s;
     }
     .password-toggle:hover {
-        color: #667eea;
+        color: #2563eb;
     }
     .ts-wrapper.form-select {
         padding: 0;
@@ -215,9 +215,9 @@
         border-color: #d1d5db;
     }
     .ts-wrapper.focus .ts-control {
-        border-color: #667eea;
+        border-color: #2563eb;
         background-color: #fff;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     }
     .ts-dropdown {
         border-radius: 12px;
@@ -235,24 +235,24 @@
         background-color: #f3f4f6;
     }
     .ts-dropdown .option.active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         color: white;
     }
     .ts-dropdown .option:hover:not(.active) {
-        background-color: rgba(102, 126, 234, 0.1);
+        background-color: rgba(37, 99, 235, 0.1);
     }
     .ts-dropdown .option.active .text-muted {
         color: rgba(255, 255, 255, 0.8) !important;
     }
     .ts-dropdown .option:hover:not(.active) .text-muted {
-        color: #667eea !important;
+        color: #2563eb !important;
     }
     .ts-dropdown .option.active .badge {
         background-color: rgba(255, 255, 255, 0.2) !important;
     }
     .ts-dropdown .option:hover:not(.active) .badge {
-        background-color: rgba(102, 126, 234, 0.2) !important;
-        color: #667eea !important;
+        background-color: rgba(37, 99, 235, 0.2) !important;
+        color: #2563eb !important;
     }
     .ts-control input {
         font-size: 0.95rem;
