@@ -97,11 +97,10 @@
     <!-- Course Selection -->
     <div class="mb-4">
         <label for="course_id" class="form-label">Select Your Course</label>
-        <select class="form-select @error('course_id') is-invalid @enderror"
-                id="course_id"
+        <select id="course_id"
                 name="course_id"
                 required>
-            <option value="">Search and select your course...</option>
+            <option value=""></option>
             @foreach($courses as $course)
                 <option value="{{ $course->id }}"
                         {{ old('course_id') == $course->id ? 'selected' : '' }}
@@ -148,7 +147,7 @@
 @endsection
 
 @push('styles')
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
 <style>
     /* intl-tel-input overrides to match the page style */
@@ -200,46 +199,80 @@
     .password-toggle:hover {
         color: #2563eb;
     }
-    .ts-wrapper.form-select {
-        padding: 0;
-        border: none;
+    /* Tom Select Custom Styles - Match other inputs */
+    #course_id {
+        display: none;
+    }
+    .ts-wrapper {
+        position: relative;
+        box-sizing: border-box;
+        width: 100%;
+    }
+    .ts-wrapper.single .ts-control {
+        position: relative;
+        display: flex;
+        align-items: center;
     }
     .ts-control {
         border: 2px solid #e5e7eb;
         border-radius: 12px;
-        padding: 0.75rem 1rem;
+        padding: 0.875rem 1rem;
         background-color: #f9fafb;
         min-height: 52px;
+        display: flex;
+        align-items: center;
+        transition: all 0.2s ease;
+        cursor: text;
+        width: 100%;
     }
     .ts-control:hover {
         border-color: #d1d5db;
+        background-color: #fff;
     }
     .ts-wrapper.focus .ts-control {
         border-color: #2563eb;
         background-color: #fff;
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        outline: none;
     }
+    .ts-wrapper .ts-control .item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0;
+    }
+    /* Dropdown - clean list, no wrapper */
     .ts-dropdown {
+        border: none;
         border-radius: 12px;
-        border: 2px solid #e5e7eb;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        margin-top: 4px;
-        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        margin-top: 8px;
+        background: #fff;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+    .ts-dropdown .ts-dropdown-content {
+        max-height: 280px;
+        padding: 0.5rem;
     }
     .ts-dropdown .option {
         padding: 0.75rem 1rem;
         transition: all 0.15s ease;
         cursor: pointer;
+        border-radius: 8px;
     }
     .ts-dropdown .option:hover {
-        background-color: #f3f4f6;
+        background-color: #f0f7ff;
     }
     .ts-dropdown .option.active {
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         color: white;
     }
     .ts-dropdown .option:hover:not(.active) {
-        background-color: rgba(37, 99, 235, 0.1);
+        background-color: #f0f7ff;
     }
     .ts-dropdown .option.active .text-muted {
         color: rgba(255, 255, 255, 0.8) !important;
@@ -257,9 +290,71 @@
     }
     .ts-control input {
         font-size: 0.95rem;
+        color: #1e293b;
+        cursor: text;
+        font-weight: 500;
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
+    .ts-control input:focus {
+        outline: none;
+        box-shadow: none;
     }
     .ts-control input::placeholder {
+        color: #64748b;
+        opacity: 1;
+        font-weight: 500;
+    }
+    /* Hide placeholder when there's a value or items selected */
+    .ts-wrapper.has-items .ts-control input::placeholder {
+        opacity: 0;
+    }
+    .ts-wrapper.focus .ts-control input::placeholder {
+        opacity: 0;
+    }
+    /* Clear button styling */
+    .ts-wrapper .ts-control .clear-button {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
         color: #9ca3af;
+        cursor: pointer;
+        padding: 0.25rem;
+        font-size: 1.1rem;
+        line-height: 1;
+        z-index: 5;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ts-wrapper .ts-control .clear-button:hover {
+        color: #ef4444;
+    }
+    /* Dropdown single select plugin */
+    .ts-wrapper.single .ts-control .item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    /* Search input inside dropdown - clean look */
+    .ts-dropdown .ts-dropdown-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-bottom: 1px solid #f3f4f6;
+        border-radius: 0;
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    .ts-dropdown .ts-dropdown-input:focus {
+        border-color: #2563eb;
+        box-shadow: none;
+        outline: none;
     }
 </style>
 @endpush
@@ -313,8 +408,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize Tom Select for searchable dropdown
     const tomSelect = new TomSelect(courseSelect, {
-        placeholder: 'Search and select your course...',
+        placeholder: 'Type to search courses...',
         allowEmptyOption: true,
+        clearButton: true,
+        selectOnTab: true,
+        openOnFocus: true,
+        hideSelected: false,
+        highlight: true,
         sortField: {
             field: 'text',
             direction: 'asc'
@@ -322,24 +422,47 @@ document.addEventListener('DOMContentLoaded', function() {
         render: {
             option: function(data, escape) {
                 const option = courseSelect.querySelector(`option[value="${data.value}"]`);
-                if (!option || !data.value) return `<div class="py-2">${escape(data.text)}</div>`;
+                if (!option || !data.value) return `<div class="py-2 px-1">${escape(data.text)}</div>`;
 
                 const level = option.dataset.level || '';
                 const units = option.dataset.units || '0';
                 const questions = option.dataset.questions || '0';
 
-                return `<div class="py-1">
-                    <div class="fw-semibold">${escape(data.text.split(' - ')[0])}</div>
-                    <div class="mt-1">
-                        ${level ? `<span class="badge me-1" style="background-color: #dbeafe; color: #1d4ed8; font-size: 0.7rem;">${escape(level)}</span>` : ''}
-                        <small class="text-muted">${escape(units)} Units &bull; ${escape(questions)} Questions</small>
+                return `<div class="d-flex align-items-start py-2">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold mb-1" style="font-size: 0.9rem;">${escape(data.text.split(' - ')[0])}</div>
+                        <div class="d-flex align-items-center gap-2">
+                            ${level ? `<span class="badge" style="background-color: #dbeafe; color: #1d4ed8; font-size: 0.65rem; font-weight: 600;">${escape(level)}</span>` : ''}
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                <i class="bi bi-collection me-1"></i>${escape(units)} Units
+                                <span class="mx-1">&bull;</span>
+                                <i class="bi bi-question-circle me-1"></i>${escape(questions)} Q&A
+                            </small>
+                        </div>
                     </div>
                 </div>`;
             },
             item: function(data, escape) {
-                return `<div>${escape(data.text)}</div>`;
+                const option = courseSelect.querySelector(`option[value="${data.value}"]`);
+                const level = option ? option.dataset.level : '';
+                return `<div class="d-flex align-items-center gap-2">
+                    <span>${escape(data.text.split(' - ')[0])}</span>
+                    ${level ? `<span class="badge" style="background-color: #dbeafe; color: #1d4ed8; font-size: 0.6rem;">${escape(level)}</span>` : ''}
+                </div>`;
             }
         }
+    });
+
+    // Focus input when dropdown opens
+    tomSelect.on('dropdown_open', function() {
+        setTimeout(function() {
+            tomSelect.$control_input.focus();
+        }, 10);
+    });
+
+    // Clear search when item is selected
+    tomSelect.on('item_add', function() {
+        tomSelect.$control_input.value = '';
     });
 
     // Show course info when selected
